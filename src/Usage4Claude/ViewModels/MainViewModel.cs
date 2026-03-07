@@ -130,6 +130,12 @@ public class MainViewModel : ViewModelBase
         _refreshService.ErrorChanged += OnErrorChanged;
         _refreshService.RefreshingChanged += OnRefreshingChanged;
 
+        // Listen for account changes to update UI automatically
+        _accountManager.CurrentAccountChanged += (_, _) =>
+        {
+            Application.Current.Dispatcher.BeginInvoke(UpdateAccountInfo);
+        };
+
         // Initial state
         UpdateAccountInfo();
     }
@@ -283,13 +289,16 @@ public class MainViewModel : ViewModelBase
         var accounts = _accountManager.Accounts;
         if (accounts.Count <= 1) return;
 
-        var currentIndex = accounts.ToList().FindIndex(a => a.Id == _accountManager.CurrentAccount?.Id);
+        var currentId = _accountManager.CurrentAccount?.Id;
+        int currentIndex = -1;
+        for (int i = 0; i < accounts.Count; i++)
+        {
+            if (accounts[i].Id == currentId) { currentIndex = i; break; }
+        }
         var nextIndex = (currentIndex + 1) % accounts.Count;
 
         if (_accountManager.SwitchAccount(accounts[nextIndex].Id))
         {
-            UpdateAccountInfo();
-
             // Reset and restart refresh for the new account
             _refreshService.Reset();
             _refreshService.Start();
@@ -297,6 +306,8 @@ public class MainViewModel : ViewModelBase
             // Update tray icon
             var iconManager = App.Current.Services.GetRequiredService<IconManager>();
             iconManager.RefreshIcon();
+
+            // Note: UpdateAccountInfo() is triggered automatically via CurrentAccountChanged event.
         }
     }
 

@@ -66,7 +66,10 @@ public partial class App : Application
         var refreshService = Services.GetRequiredService<DataRefreshService>();
         refreshService.Start();
 
-        // Build dynamic account submenu
+        // Build dynamic account submenu and subscribe to changes
+        var accountManager = Services.GetRequiredService<AccountManager>();
+        accountManager.AccountListChanged += (_, _) => Dispatcher.BeginInvoke(RebuildAccountMenu);
+        accountManager.CurrentAccountChanged += (_, _) => Dispatcher.BeginInvoke(RebuildAccountMenu);
         RebuildAccountMenu();
 
         // Wire up left-click on tray icon to show the popup window
@@ -203,12 +206,21 @@ public partial class App : Application
         int insertAt = settingsIndex;
         foreach (var account in accountManager.Accounts)
         {
+            var isCurrent = account.Id == accountManager.CurrentAccount?.Id;
             var menuItem = new MenuItem
             {
                 Header = account.DisplayName,
                 Tag = $"Account_{account.Id}",
-                IsCheckable = true,
-                IsChecked = account.Id == accountManager.CurrentAccount?.Id
+                // Use a visual indicator instead of IsCheckable to avoid auto-toggle before Click handler
+                Icon = isCurrent
+                    ? new System.Windows.Shapes.Ellipse
+                    {
+                        Width = 8,
+                        Height = 8,
+                        Fill = System.Windows.Media.Brushes.Green
+                    }
+                    : null,
+                FontWeight = isCurrent ? FontWeights.Bold : FontWeights.Normal
             };
             var accountId = account.Id; // Capture for closure
             menuItem.Click += (_, _) => SwitchAccount(accountId);
@@ -231,16 +243,12 @@ public partial class App : Application
             refreshService.Reset();
             refreshService.Start();
 
-            // Update UI
-            var viewModel = Services.GetRequiredService<MainViewModel>();
-            viewModel.UpdateAccountInfo();
-
             // Update icon
             var iconManager = Services.GetRequiredService<IconManager>();
             iconManager.RefreshIcon();
 
-            // Rebuild menu to update checkmarks
-            RebuildAccountMenu();
+            // Note: MainViewModel.UpdateAccountInfo() and RebuildAccountMenu() are
+            // triggered automatically via CurrentAccountChanged event subscription.
         }
     }
 
