@@ -25,6 +25,7 @@ public enum RefreshMode
     Fixed
 }
 
+// Used by data refresh logic in task 03 (monitoring interval adaptation)
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum MonitoringMode
 {
@@ -67,6 +68,7 @@ public enum AppAppearance
     Dark
 }
 
+// TODO: Add locale-compatible serialization values (en, ja, zh-Hans, zh-Hant, ko) in task 08-00 (i18n)
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AppLanguage
 {

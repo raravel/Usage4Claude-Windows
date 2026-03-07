@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace Usage4Claude.Models;
 
 public class UserSettings

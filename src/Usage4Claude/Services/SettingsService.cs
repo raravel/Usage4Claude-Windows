@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using Usage4Claude.Models;
 
 namespace Usage4Claude.Services;
 
+// TODO: Extract ISettingsService interface and add thread safety when DI container is introduced (task 01-04+)
 public class SettingsService
 {
     private static readonly string AppDataPath = Path.Combine(
@@ -44,8 +46,14 @@ public class SettingsService
                 Save(); // 기본값으로 첫 저장
             }
         }
-        catch
+        catch (IOException ex)
         {
+            Debug.WriteLine($"[SettingsService] Failed to load settings (IO): {ex.Message}");
+            _settings = new UserSettings();
+        }
+        catch (JsonException ex)
+        {
+            Debug.WriteLine($"[SettingsService] Failed to load settings (JSON): {ex.Message}");
             _settings = new UserSettings();
         }
     }
@@ -58,9 +66,13 @@ public class SettingsService
             var json = JsonSerializer.Serialize(_settings, JsonOptions);
             File.WriteAllText(SettingsFilePath, json);
         }
-        catch
+        catch (IOException ex)
         {
-            // 저장 실패 시 무시 (추후 로깅 추가)
+            Debug.WriteLine($"[SettingsService] Failed to save settings (IO): {ex.Message}");
+        }
+        catch (JsonException ex)
+        {
+            Debug.WriteLine($"[SettingsService] Failed to save settings (JSON): {ex.Message}");
         }
     }
 
