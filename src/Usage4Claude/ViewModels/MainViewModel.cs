@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Usage4Claude.Models;
 using Usage4Claude.Services;
 
@@ -10,6 +11,11 @@ public class MainViewModel : ViewModelBase
     private readonly DataRefreshService _refreshService;
     private readonly AccountManager _accountManager;
     private readonly SmartMonitorService _smartMonitor;
+    private readonly SettingsService _settingsService;
+
+    // Raw reset-at timestamps for countdown computation
+    private DateTime? _fiveHourResetsAt;
+    private DateTime? _sevenDayResetsAt;
 
     // Usage data properties
     private double _fiveHourPercentage;
@@ -18,6 +24,11 @@ public class MainViewModel : ViewModelBase
     private string? _sevenDayResetTime;
     private double? _opusPercentage;
     private double? _sonnetPercentage;
+
+    // Countdown properties
+    private string _fiveHourCountdown = string.Empty;
+    private string _sevenDayCountdown = string.Empty;
+    private bool _showRemainingMode;
 
     // Extra usage
     private bool _hasExtraUsage;
@@ -32,6 +43,9 @@ public class MainViewModel : ViewModelBase
     private string _accountDisplayName = string.Empty;
     private bool _hasAccounts;
 
+    // Countdown timer
+    private DispatcherTimer? _countdownTimer;
+
     // Properties with change notification
     public double FiveHourPercentage { get => _fiveHourPercentage; private set => SetProperty(ref _fiveHourPercentage, value); }
     public string FiveHourResetTime { get => _fiveHourResetTime; private set => SetProperty(ref _fiveHourResetTime, value); }
@@ -39,6 +53,47 @@ public class MainViewModel : ViewModelBase
     public string? SevenDayResetTime { get => _sevenDayResetTime; private set => SetProperty(ref _sevenDayResetTime, value); }
     public double? OpusPercentage { get => _opusPercentage; private set => SetProperty(ref _opusPercentage, value); }
     public double? SonnetPercentage { get => _sonnetPercentage; private set => SetProperty(ref _sonnetPercentage, value); }
+
+    public string FiveHourCountdown { get => _fiveHourCountdown; private set => SetProperty(ref _fiveHourCountdown, value); }
+    public string SevenDayCountdown { get => _sevenDayCountdown; private set => SetProperty(ref _sevenDayCountdown, value); }
+
+    public bool ShowRemainingMode
+    {
+        get => _showRemainingMode;
+        set
+        {
+            if (SetProperty(ref _showRemainingMode, value))
+            {
+                NotifyDisplayValueProperties();
+            }
+        }
+    }
+
+    // Computed display values that switch between reset time and countdown
+    public string FiveHourDisplayValue
+    {
+        get
+        {
+            var suffix = ShowRemainingMode ? FiveHourCountdown : FiveHourResetTime;
+            return string.IsNullOrEmpty(suffix)
+                ? $"{FiveHourPercentage:F0}%"
+                : $"{FiveHourPercentage:F0}% - {suffix}";
+        }
+    }
+
+    public string SevenDayDisplayValue => SevenDayPercentage.HasValue
+        ? (ShowRemainingMode
+            ? $"{SevenDayPercentage:F0}% - {SevenDayCountdown}"
+            : $"{SevenDayPercentage:F0}% - {SevenDayResetTime}")
+        : string.Empty;
+
+    public string OpusDisplayValue => OpusPercentage.HasValue
+        ? $"{OpusPercentage:F0}%"
+        : string.Empty;
+
+    public string SonnetDisplayValue => SonnetPercentage.HasValue
+        ? $"{SonnetPercentage:F0}%"
+        : string.Empty;
 
     public bool HasExtraUsage { get => _hasExtraUsage; private set => SetProperty(ref _hasExtraUsage, value); }
     public double? ExtraUsagePercentage { get => _extraUsagePercentage; private set => SetProperty(ref _extraUsagePercentage, value); }
@@ -53,14 +108,17 @@ public class MainViewModel : ViewModelBase
 
     // Commands
     public ICommand RefreshCommand { get; }
+    public ICommand ToggleDisplayModeCommand { get; }
 
-    public MainViewModel(DataRefreshService refreshService, AccountManager accountManager, SmartMonitorService smartMonitor)
+    public MainViewModel(DataRefreshService refreshService, AccountManager accountManager, SmartMonitorService smartMonitor, SettingsService settingsService)
     {
         _refreshService = refreshService;
         _accountManager = accountManager;
         _smartMonitor = smartMonitor;
+        _settingsService = settingsService;
 
         RefreshCommand = new AsyncRelayCommand(async () => await _refreshService.ManualRefreshAsync());
+        ToggleDisplayModeCommand = new RelayCommand(() => ShowRemainingMode = !ShowRemainingMode);
 
         // Subscribe to service events
         _refreshService.UsageDataChanged += OnUsageDataChanged;
@@ -71,12 +129,76 @@ public class MainViewModel : ViewModelBase
         UpdateAccountInfo();
     }
 
+    /// <summary>
+    /// Start the countdown timer. Called when the popup window opens.
+    /// The timer runs on the UI dispatcher thread, so property updates are safe.
+    /// </summary>
+    public void StartCountdownTimer()
+    {
+        if (_countdownTimer != null) return;
+
+        _countdownTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+        _countdownTimer.Tick += OnCountdownTick;
+        _countdownTimer.Start();
+
+        // Update immediately so the countdown shows right away
+        UpdateCountdownValues();
+    }
+
+    /// <summary>
+    /// Stop the countdown timer. Called when the popup window closes.
+    /// </summary>
+    public void StopCountdownTimer()
+    {
+        if (_countdownTimer == null) return;
+
+        _countdownTimer.Tick -= OnCountdownTick;
+        _countdownTimer.Stop();
+        _countdownTimer = null;
+    }
+
+    private void OnCountdownTick(object? sender, EventArgs e)
+    {
+        UpdateCountdownValues();
+
+        // Stop timer if both reset times have passed or are null
+        var fiveHourExpired = !_fiveHourResetsAt.HasValue || _fiveHourResetsAt.Value <= DateTime.UtcNow;
+        var sevenDayExpired = !_sevenDayResetsAt.HasValue || _sevenDayResetsAt.Value <= DateTime.UtcNow;
+
+        if (fiveHourExpired && sevenDayExpired)
+        {
+            StopCountdownTimer();
+        }
+    }
+
+    private void UpdateCountdownValues()
+    {
+        FiveHourCountdown = FormatCountdown(_fiveHourResetsAt, useShortFormat: false);
+        SevenDayCountdown = FormatCountdown(_sevenDayResetsAt, useShortFormat: true);
+        NotifyDisplayValueProperties();
+    }
+
+    private void NotifyDisplayValueProperties()
+    {
+        OnPropertyChanged(nameof(FiveHourDisplayValue));
+        OnPropertyChanged(nameof(SevenDayDisplayValue));
+        OnPropertyChanged(nameof(OpusDisplayValue));
+        OnPropertyChanged(nameof(SonnetDisplayValue));
+    }
+
     private void OnUsageDataChanged(object? sender, UsageData? data)
     {
         if (data == null) return;
 
         Application.Current.Dispatcher.Invoke(() =>
         {
+            // Store raw reset timestamps for countdown computation
+            _fiveHourResetsAt = data.FiveHour?.ResetsAt;
+            _sevenDayResetsAt = data.SevenDay?.ResetsAt;
+
             // Five hour (always present)
             FiveHourPercentage = data.FiveHour?.Percentage ?? 0;
             FiveHourResetTime = FormatResetTime(data.FiveHour?.ResetsAt);
@@ -93,6 +215,25 @@ public class MainViewModel : ViewModelBase
             HasExtraUsage = data.ExtraUsage?.Enabled == true;
             ExtraUsagePercentage = data.ExtraUsage?.Percentage;
             ExtraUsageText = FormatExtraUsage(data.ExtraUsage);
+
+            // Update countdown and display values
+            if (_countdownTimer != null)
+            {
+                UpdateCountdownValues();
+            }
+            else
+            {
+                // Timer not running - still notify display value changes for XAML bindings
+                NotifyDisplayValueProperties();
+
+                // Restart timer if new future reset timestamps arrived
+                var hasFutureReset = (_fiveHourResetsAt.HasValue && _fiveHourResetsAt.Value > DateTime.UtcNow)
+                                  || (_sevenDayResetsAt.HasValue && _sevenDayResetsAt.Value > DateTime.UtcNow);
+                if (hasFutureReset)
+                {
+                    StartCountdownTimer();
+                }
+            }
 
             // Status
             HasError = false;
@@ -131,18 +272,67 @@ public class MainViewModel : ViewModelBase
         AccountDisplayName = _accountManager.CurrentAccount?.DisplayName ?? "No account";
     }
 
-    private static string FormatResetTime(DateTime? resetTime)
+    private string FormatResetTime(DateTime? resetTime)
     {
         if (resetTime == null) return string.Empty;
 
         var remaining = resetTime.Value - DateTime.UtcNow;
         if (remaining <= TimeSpan.Zero) return "Resetting...";
 
+        var timeFormat = _settingsService.Settings.TimeFormat;
+        var localResetTime = resetTime.Value.ToLocalTime();
+
+        return timeFormat switch
+        {
+            TimeFormatPreference.TwelveHour => localResetTime.ToString("h:mm tt"),
+            TimeFormatPreference.TwentyFourHour => localResetTime.ToString("HH:mm"),
+            _ => FormatResetTimeRelative(remaining) // System default: relative format
+        };
+    }
+
+    private static string FormatResetTimeRelative(TimeSpan remaining)
+    {
+        if (remaining.TotalDays >= 1)
+            return $"{(int)remaining.TotalDays}d {remaining.Hours}h";
         if (remaining.TotalHours >= 1)
             return $"{(int)remaining.TotalHours}h {remaining.Minutes}m";
         if (remaining.TotalMinutes >= 1)
             return $"{(int)remaining.TotalMinutes}m";
         return "< 1m";
+    }
+
+    /// <summary>
+    /// Format a countdown from a reset-at timestamp to a human-readable string
+    /// that updates every second.
+    /// </summary>
+    /// <param name="resetsAt">The UTC time when the limit resets.</param>
+    /// <param name="useShortFormat">
+    /// When true, uses day-granularity format (Xd Yh Zm) for longer periods.
+    /// When false, always includes seconds (Xh Ym Zs).
+    /// </param>
+    private static string FormatCountdown(DateTime? resetsAt, bool useShortFormat)
+    {
+        if (resetsAt == null) return string.Empty;
+
+        var remaining = resetsAt.Value - DateTime.UtcNow;
+        if (remaining <= TimeSpan.Zero) return "Resetting...";
+
+        if (useShortFormat && remaining.TotalDays >= 1)
+        {
+            return $"{(int)remaining.TotalDays}d {remaining.Hours}h {remaining.Minutes}m";
+        }
+
+        if (remaining.TotalHours >= 1)
+        {
+            return $"{(int)remaining.TotalHours}h {remaining.Minutes:D2}m {remaining.Seconds:D2}s";
+        }
+
+        if (remaining.TotalMinutes >= 1)
+        {
+            return $"{(int)remaining.TotalMinutes}m {remaining.Seconds:D2}s";
+        }
+
+        return $"{remaining.Seconds}s";
     }
 
     private static string FormatExtraUsage(ExtraUsageData? extra)
