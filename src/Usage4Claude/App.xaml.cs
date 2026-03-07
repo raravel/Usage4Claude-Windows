@@ -100,6 +100,9 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // Stop background services
+        Services.GetService<DataRefreshService>()?.Stop();
+
         _notifyIcon?.Dispose();
         _mutex?.ReleaseMutex();
         _mutex?.Dispose();
