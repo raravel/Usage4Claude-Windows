@@ -105,10 +105,10 @@ public partial class App : Application
         services.AddSingleton<DataRefreshService>();
         services.AddSingleton<IconManager>();
         services.AddSingleton<AutoStartService>();
+        services.AddSingleton<UpdateCheckService>();
         // Future services to be registered as they are implemented:
         // services.AddSingleton<NotificationService>();
         // services.AddSingleton<LocalizationService>();
-        // services.AddSingleton<UpdateCheckService>();
 
         // ViewModels (Singleton - subscribes to service events)
         services.AddSingleton<MainViewModel>();

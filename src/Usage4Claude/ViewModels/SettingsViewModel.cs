@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Usage4Claude.Models;
 using Usage4Claude.Services;
 
@@ -45,6 +46,10 @@ public class SettingsViewModel : ViewModelBase
         SetCurrentAccountCommand = new RelayCommand(ExecuteSetCurrentAccount, CanExecuteSetCurrentAccount);
         TestConnectionCommand = new AsyncRelayCommand(ExecuteTestConnectionAsync, CanExecuteTestConnection);
         SaveAccountChangesCommand = new RelayCommand(ExecuteSaveAccountChanges, CanExecuteSaveAccountChanges);
+
+        // Update check commands
+        CheckForUpdateCommand = new AsyncRelayCommand(ExecuteCheckForUpdate);
+        OpenUpdateUrlCommand = new RelayCommand(ExecuteOpenUpdateUrl);
 
         // Load initial accounts
         RefreshAccountsList();
@@ -634,6 +639,86 @@ public class SettingsViewModel : ViewModelBase
     private void Save()
     {
         _settingsService.Save();
+    }
+
+    // =====================================================
+    // About tab: Update check
+    // =====================================================
+
+    private string _updateStatusText = string.Empty;
+    public string UpdateStatusText
+    {
+        get => _updateStatusText;
+        private set => SetProperty(ref _updateStatusText, value);
+    }
+
+    private bool _isUpdateAvailable;
+    public bool IsUpdateAvailable
+    {
+        get => _isUpdateAvailable;
+        private set => SetProperty(ref _isUpdateAvailable, value);
+    }
+
+    private string _updateUrl = string.Empty;
+    public string UpdateUrl
+    {
+        get => _updateUrl;
+        private set => SetProperty(ref _updateUrl, value);
+    }
+
+    private bool _isCheckingForUpdate;
+    public bool IsCheckingForUpdate
+    {
+        get => _isCheckingForUpdate;
+        private set => SetProperty(ref _isCheckingForUpdate, value);
+    }
+
+    public ICommand CheckForUpdateCommand { get; }
+    public ICommand OpenUpdateUrlCommand { get; }
+
+    private async Task ExecuteCheckForUpdate()
+    {
+        IsCheckingForUpdate = true;
+        UpdateStatusText = "Checking for updates...";
+
+        try
+        {
+            var updateService = App.Current.Services.GetRequiredService<UpdateCheckService>();
+            var result = await updateService.CheckForUpdateAsync(forceCheck: true);
+
+            if (!string.IsNullOrEmpty(result.ErrorMessage))
+            {
+                UpdateStatusText = $"Check failed: {result.ErrorMessage}";
+                IsUpdateAvailable = false;
+            }
+            else if (result.IsUpToDate)
+            {
+                UpdateStatusText = $"You're up to date! (v{result.CurrentVersion})";
+                IsUpdateAvailable = false;
+            }
+            else
+            {
+                UpdateStatusText = $"Update available: v{result.LatestVersion}";
+                UpdateUrl = result.ReleaseUrl ?? "";
+                IsUpdateAvailable = true;
+            }
+        }
+        finally
+        {
+            IsCheckingForUpdate = false;
+        }
+    }
+
+    private void ExecuteOpenUpdateUrl()
+    {
+        if (!string.IsNullOrEmpty(UpdateUrl))
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = UpdateUrl,
+                UseShellExecute = true
+            });
+        }
     }
 }
 
