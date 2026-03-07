@@ -3,7 +3,7 @@
                     xmlns:tb="clr-namespace:H.NotifyIcon;assembly=H.NotifyIcon.Wpf">
 
     <ContextMenu x:Key="SysTrayMenu" x:Shared="false">
-        <MenuItem Header="종료" />
+        <MenuItem Header="종료" Tag="Exit" />
     </ContextMenu>
 
     <tb:TaskbarIcon x:Key="NotifyIcon"
