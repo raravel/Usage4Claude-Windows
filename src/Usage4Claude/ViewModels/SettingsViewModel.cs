@@ -1,3 +1,7 @@
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Input;
 using Usage4Claude.Models;
 using Usage4Claude.Services;
 
@@ -7,11 +11,29 @@ public class SettingsViewModel : ViewModelBase
 {
     private readonly SettingsService _settingsService;
     private readonly IconManager _iconManager;
+    private readonly AccountManager _accountManager;
+    private readonly ClaudeApiService _claudeApiService;
 
-    public SettingsViewModel(SettingsService settingsService, IconManager iconManager)
+    public SettingsViewModel(
+        SettingsService settingsService,
+        IconManager iconManager,
+        AccountManager accountManager,
+        ClaudeApiService claudeApiService)
     {
         _settingsService = settingsService;
         _iconManager = iconManager;
+        _accountManager = accountManager;
+        _claudeApiService = claudeApiService;
+
+        // Initialize commands
+        AddAccountCommand = new RelayCommand(ExecuteAddAccount, CanExecuteAddAccount);
+        RemoveAccountCommand = new RelayCommand(ExecuteRemoveAccount, CanExecuteRemoveAccount);
+        SetCurrentAccountCommand = new RelayCommand(ExecuteSetCurrentAccount, CanExecuteSetCurrentAccount);
+        TestConnectionCommand = new AsyncRelayCommand(ExecuteTestConnectionAsync, CanExecuteTestConnection);
+        SaveAccountChangesCommand = new RelayCommand(ExecuteSaveAccountChanges, CanExecuteSaveAccountChanges);
+
+        // Load initial accounts
+        RefreshAccountsList();
     }
 
     // --- Display settings ---
@@ -278,6 +300,298 @@ public class SettingsViewModel : ViewModelBase
         new(300, "5 min"),
         new(600, "10 min")
     };
+
+    // =====================================================
+    // Auth tab: Account management
+    // =====================================================
+
+    /// <summary>
+    /// Observable collection of account display items for the ListBox.
+    /// </summary>
+    public ObservableCollection<AccountDisplayItem> Accounts { get; } = new();
+
+    private AccountDisplayItem? _selectedAccount;
+    /// <summary>
+    /// Currently selected account in the list.
+    /// When changed, populates the edit fields.
+    /// </summary>
+    public AccountDisplayItem? SelectedAccount
+    {
+        get => _selectedAccount;
+        set
+        {
+            if (SetProperty(ref _selectedAccount, value))
+            {
+                OnPropertyChanged(nameof(HasSelectedAccount));
+                PopulateEditFields();
+            }
+        }
+    }
+
+    /// <summary>Whether an account is selected in the list.</summary>
+    public bool HasSelectedAccount => SelectedAccount != null;
+
+    // --- Edit fields (populated when an account is selected) ---
+
+    private string _editDisplayName = string.Empty;
+    public string EditDisplayName
+    {
+        get => _editDisplayName;
+        set => SetProperty(ref _editDisplayName, value);
+    }
+
+    private string _editOrgId = string.Empty;
+    public string EditOrgId
+    {
+        get => _editOrgId;
+        set => SetProperty(ref _editOrgId, value);
+    }
+
+    private string _editSessionKey = string.Empty;
+    public string EditSessionKey
+    {
+        get => _editSessionKey;
+        set => SetProperty(ref _editSessionKey, value);
+    }
+
+    // --- Manual entry fields ---
+
+    private string _newOrgId = string.Empty;
+    public string NewOrgId
+    {
+        get => _newOrgId;
+        set => SetProperty(ref _newOrgId, value);
+    }
+
+    private string _newSessionKey = string.Empty;
+    public string NewSessionKey
+    {
+        get => _newSessionKey;
+        set => SetProperty(ref _newSessionKey, value);
+    }
+
+    private string _newDisplayName = string.Empty;
+    public string NewDisplayName
+    {
+        get => _newDisplayName;
+        set => SetProperty(ref _newDisplayName, value);
+    }
+
+    // --- Diagnostic ---
+
+    private string _diagnosticResult = string.Empty;
+    public string DiagnosticResult
+    {
+        get => _diagnosticResult;
+        set => SetProperty(ref _diagnosticResult, value);
+    }
+
+    private bool _isDiagnosticRunning;
+    public bool IsDiagnosticRunning
+    {
+        get => _isDiagnosticRunning;
+        set => SetProperty(ref _isDiagnosticRunning, value);
+    }
+
+    private bool? _diagnosticSuccess;
+    /// <summary>
+    /// Nullable bool for diagnostic result coloring.
+    /// True = green, False = red, null = default.
+    /// </summary>
+    public bool? DiagnosticSuccess
+    {
+        get => _diagnosticSuccess;
+        set => SetProperty(ref _diagnosticSuccess, value);
+    }
+
+    // --- Commands ---
+
+    public ICommand AddAccountCommand { get; }
+    public ICommand RemoveAccountCommand { get; }
+    public ICommand SetCurrentAccountCommand { get; }
+    public ICommand TestConnectionCommand { get; }
+    public ICommand SaveAccountChangesCommand { get; }
+
+    // --- Command implementations ---
+
+    private bool CanExecuteAddAccount() =>
+        !string.IsNullOrWhiteSpace(NewOrgId) && !string.IsNullOrWhiteSpace(NewSessionKey);
+
+    private void ExecuteAddAccount()
+    {
+        var orgId = NewOrgId.Trim();
+        var sessionKey = NewSessionKey.Trim();
+        var displayName = string.IsNullOrWhiteSpace(NewDisplayName) ? null : NewDisplayName.Trim();
+
+        var success = _accountManager.AddAccount(sessionKey, orgId, displayName ?? orgId, displayName);
+        if (success)
+        {
+            NewOrgId = string.Empty;
+            NewSessionKey = string.Empty;
+            NewDisplayName = string.Empty;
+            RefreshAccountsList();
+        }
+        else
+        {
+            MessageBox.Show("Failed to add account. Please check your input and try again.",
+                "Add Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private bool CanExecuteRemoveAccount() => SelectedAccount != null;
+
+    private void ExecuteRemoveAccount()
+    {
+        if (SelectedAccount == null) return;
+
+        var result = MessageBox.Show(
+            $"Are you sure you want to remove the account \"{SelectedAccount.DisplayName}\"?",
+            "Remove Account",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result != MessageBoxResult.Yes) return;
+
+        var success = _accountManager.RemoveAccount(SelectedAccount.Id);
+        if (success)
+        {
+            SelectedAccount = null;
+            RefreshAccountsList();
+        }
+        else
+        {
+            MessageBox.Show("Failed to remove account.",
+                "Remove Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private bool CanExecuteSetCurrentAccount() =>
+        SelectedAccount != null && !SelectedAccount.IsCurrent;
+
+    private void ExecuteSetCurrentAccount()
+    {
+        if (SelectedAccount == null) return;
+
+        var success = _accountManager.SwitchAccount(SelectedAccount.Id);
+        if (success)
+        {
+            RefreshAccountsList();
+        }
+    }
+
+    private bool CanExecuteTestConnection() => !IsDiagnosticRunning;
+
+    private async Task ExecuteTestConnectionAsync()
+    {
+        var currentAccount = _accountManager.CurrentAccount;
+        if (currentAccount == null)
+        {
+            DiagnosticResult = "No active account configured. Please add an account first.";
+            DiagnosticSuccess = false;
+            return;
+        }
+
+        IsDiagnosticRunning = true;
+        DiagnosticResult = string.Empty;
+        DiagnosticSuccess = null;
+
+        try
+        {
+            var organizations = await _claudeApiService.FetchOrganizationsAsync(currentAccount.SessionKey);
+            if (organizations.Count > 0)
+            {
+                var orgNames = string.Join(", ", organizations.Select(o => o.Name));
+                DiagnosticResult = $"Connection successful!\nOrganizations: {orgNames}";
+                DiagnosticSuccess = true;
+            }
+            else
+            {
+                DiagnosticResult = "Connection successful, but no organizations found.";
+                DiagnosticSuccess = true;
+            }
+        }
+        catch (UsageError ex)
+        {
+            DiagnosticResult = $"Connection failed: {ex.Message}";
+            DiagnosticSuccess = false;
+            Debug.WriteLine($"[SettingsViewModel] Connection test failed: {ex}");
+        }
+        catch (Exception ex)
+        {
+            DiagnosticResult = $"Unexpected error: {ex.Message}";
+            DiagnosticSuccess = false;
+            Debug.WriteLine($"[SettingsViewModel] Connection test unexpected error: {ex}");
+        }
+        finally
+        {
+            IsDiagnosticRunning = false;
+        }
+    }
+
+    private bool CanExecuteSaveAccountChanges() => SelectedAccount != null;
+
+    private void ExecuteSaveAccountChanges()
+    {
+        if (SelectedAccount == null) return;
+
+        var account = SelectedAccount.Account;
+
+        // Update alias
+        var newAlias = string.IsNullOrWhiteSpace(EditDisplayName) ? null : EditDisplayName.Trim();
+        _accountManager.UpdateAlias(account.Id, newAlias);
+
+        // Update session key if changed
+        var newSessionKey = EditSessionKey.Trim();
+        if (!string.IsNullOrEmpty(newSessionKey) && newSessionKey != account.SessionKey)
+        {
+            // Re-add the account with the new session key (AddAccount handles updates for same org ID)
+            _accountManager.AddAccount(newSessionKey, account.OrganizationId, account.OrganizationName, newAlias);
+        }
+
+        RefreshAccountsList();
+    }
+
+    // --- Helpers ---
+
+    /// <summary>
+    /// Populate edit fields from the currently selected account.
+    /// </summary>
+    private void PopulateEditFields()
+    {
+        if (SelectedAccount == null)
+        {
+            EditDisplayName = string.Empty;
+            EditOrgId = string.Empty;
+            EditSessionKey = string.Empty;
+            return;
+        }
+
+        EditDisplayName = SelectedAccount.Alias ?? string.Empty;
+        EditOrgId = SelectedAccount.OrganizationId;
+        EditSessionKey = SelectedAccount.SessionKey;
+    }
+
+    /// <summary>
+    /// Reload the accounts list from AccountManager.
+    /// </summary>
+    private void RefreshAccountsList()
+    {
+        var currentId = _accountManager.CurrentAccount?.Id;
+        var previousSelectedId = SelectedAccount?.Id;
+
+        Accounts.Clear();
+        foreach (var account in _accountManager.Accounts)
+        {
+            var isCurrent = account.Id == currentId;
+            Accounts.Add(new AccountDisplayItem(account, isCurrent));
+        }
+
+        // Restore selection if possible
+        if (previousSelectedId != null)
+        {
+            SelectedAccount = Accounts.FirstOrDefault(a => a.Id == previousSelectedId);
+        }
+    }
 
     private void Save()
     {

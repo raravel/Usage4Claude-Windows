@@ -90,9 +90,7 @@
             <ScrollViewer x:Name="AuthContent"
                           VerticalScrollBarVisibility="Auto"
                           Visibility="{Binding IsChecked, ElementName=AuthTab, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="Auth settings will go here (Task 06-02)"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Foreground="Gray" />
+                <tabs:AuthSettingsTab />
             </ScrollViewer>
 
             <!-- About tab content -->
