@@ -1,0 +1,109 @@
+<Window x:Class="Usage4Claude.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Usage4Claude - Settings"
+        Width="500" Height="550"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="True">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- Custom RadioButton style that looks like toolbar toggle buttons -->
+        <Style x:Key="TabButtonStyle" TargetType="RadioButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="TabBorder"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                CornerRadius="6"
+                                Padding="12,6"
+                                Cursor="Hand"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="TabContent"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Mouse hover (not checked) -->
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                    <Condition Property="IsChecked" Value="False" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="TabBorder" Property="Background" Value="#10000000" />
+                            </MultiTrigger>
+                            <!-- Checked / selected -->
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#18000000" />
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#30000000" />
+                                <Setter TargetName="TabBorder" Property="BorderThickness" Value="1" />
+                                <Setter TargetName="TabContent" Property="TextBlock.FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#333333" />
+            <Setter Property="GroupName" Value="SettingsTabs" />
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Tab header -->
+            <RowDefinition Height="1" />    <!-- Separator -->
+            <RowDefinition Height="*" />    <!-- Content -->
+        </Grid.RowDefinitions>
+
+        <!-- Custom tab header (toolbar style) -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal"
+                    HorizontalAlignment="Center" Margin="0,8">
+            <RadioButton x:Name="GeneralTab" Content="&#x2699; General"
+                         IsChecked="True" Style="{StaticResource TabButtonStyle}" />
+            <Rectangle Width="1" Fill="#CCCCCC" Margin="8,4" />
+            <RadioButton x:Name="AuthTab" Content="&#x1F511; Auth"
+                         Style="{StaticResource TabButtonStyle}" />
+            <Rectangle Width="1" Fill="#CCCCCC" Margin="8,4" />
+            <RadioButton x:Name="AboutTab" Content="&#x2139; About"
+                         Style="{StaticResource TabButtonStyle}" />
+        </StackPanel>
+
+        <!-- Separator line -->
+        <Rectangle Grid.Row="1" Fill="#E0E0E0" />
+
+        <!-- Tab content area -->
+        <Grid Grid.Row="2">
+            <!-- General tab content -->
+            <ScrollViewer x:Name="GeneralContent"
+                          VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding IsChecked, ElementName=GeneralTab, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="General settings will go here (Task 06-01)"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="Gray" />
+            </ScrollViewer>
+
+            <!-- Auth tab content -->
+            <ScrollViewer x:Name="AuthContent"
+                          VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding IsChecked, ElementName=AuthTab, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="Auth settings will go here (Task 06-02)"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="Gray" />
+            </ScrollViewer>
+
+            <!-- About tab content -->
+            <ScrollViewer x:Name="AboutContent"
+                          VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding IsChecked, ElementName=AboutTab, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="About info will go here (Task 06-03)"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="Gray" />
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>
