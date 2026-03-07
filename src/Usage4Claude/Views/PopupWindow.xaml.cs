@@ -26,6 +26,7 @@ public partial class PopupWindow : Window
         {
             vm.PropertyChanged += OnViewModelPropertyChanged;
             UpdateSpinAnimation(vm.IsRefreshing);
+            vm.StartCountdownTimer();
         }
     }
 
@@ -53,6 +54,17 @@ public partial class PopupWindow : Window
         else
         {
             _spinStoryboard.Stop(this);
+        }
+    }
+
+    /// <summary>
+    /// Toggle between reset time and countdown display when the info rows are clicked.
+    /// </summary>
+    private void InfoRows_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is ViewModels.MainViewModel vm)
+        {
+            vm.ToggleDisplayModeCommand.Execute(null);
         }
     }
 
@@ -101,6 +113,7 @@ public partial class PopupWindow : Window
         if (DataContext is ViewModels.MainViewModel vm)
         {
             vm.PropertyChanged -= OnViewModelPropertyChanged;
+            vm.StopCountdownTimer();
         }
 
         _spinStoryboard?.Stop(this);

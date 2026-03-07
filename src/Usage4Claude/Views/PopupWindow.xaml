@@ -126,23 +126,23 @@
                                            Margin="0,4,0,16"
                                            Cursor="Hand" />
 
-                <!-- Usage info rows -->
-                <StackPanel Margin="0,0,0,0">
+                <!-- Usage info rows (clickable to toggle display mode) -->
+                <StackPanel Margin="0,0,0,0"
+                            Cursor="Hand"
+                            MouseLeftButtonDown="InfoRows_MouseLeftButtonDown">
+                    <StackPanel.Background>
+                        <SolidColorBrush Color="Transparent" />
+                    </StackPanel.Background>
 
                     <!-- 5-Hour row (always visible) -->
                     <controls:UsageInfoRow LimitName="5-Hour"
+                                           ValueText="{Binding FiveHourDisplayValue}"
                                            IndicatorColor="#4CAF50"
-                                           Margin="0,0,0,4">
-                        <controls:UsageInfoRow.ValueText>
-                            <MultiBinding StringFormat="{}{0:F0}% - {1}">
-                                <Binding Path="FiveHourPercentage" />
-                                <Binding Path="FiveHourResetTime" />
-                            </MultiBinding>
-                        </controls:UsageInfoRow.ValueText>
-                    </controls:UsageInfoRow>
+                                           Margin="0,0,0,4" />
 
                     <!-- 7-Day row -->
                     <controls:UsageInfoRow LimitName="7-Day"
+                                           ValueText="{Binding SevenDayDisplayValue}"
                                            IndicatorColor="#9C27B0"
                                            Margin="0,0,0,4">
                         <controls:UsageInfoRow.Style>
@@ -155,16 +155,11 @@
                                 </Style.Triggers>
                             </Style>
                         </controls:UsageInfoRow.Style>
-                        <controls:UsageInfoRow.ValueText>
-                            <MultiBinding StringFormat="{}{0:F0}% - {1}">
-                                <Binding Path="SevenDayPercentage" />
-                                <Binding Path="SevenDayResetTime" />
-                            </MultiBinding>
-                        </controls:UsageInfoRow.ValueText>
                     </controls:UsageInfoRow>
 
                     <!-- Opus row -->
                     <controls:UsageInfoRow LimitName="Opus"
+                                           ValueText="{Binding OpusDisplayValue}"
                                            IndicatorColor="#FF9800"
                                            Margin="0,0,0,4">
                         <controls:UsageInfoRow.Style>
@@ -177,15 +172,11 @@
                                 </Style.Triggers>
                             </Style>
                         </controls:UsageInfoRow.Style>
-                        <controls:UsageInfoRow.ValueText>
-                            <MultiBinding StringFormat="{}{0:F0}%">
-                                <Binding Path="OpusPercentage" />
-                            </MultiBinding>
-                        </controls:UsageInfoRow.ValueText>
                     </controls:UsageInfoRow>
 
                     <!-- Sonnet row -->
                     <controls:UsageInfoRow LimitName="Sonnet"
+                                           ValueText="{Binding SonnetDisplayValue}"
                                            IndicatorColor="#2196F3"
                                            Margin="0,0,0,4">
                         <controls:UsageInfoRow.Style>
@@ -198,11 +189,6 @@
                                 </Style.Triggers>
                             </Style>
                         </controls:UsageInfoRow.Style>
-                        <controls:UsageInfoRow.ValueText>
-                            <MultiBinding StringFormat="{}{0:F0}%">
-                                <Binding Path="SonnetPercentage" />
-                            </MultiBinding>
-                        </controls:UsageInfoRow.ValueText>
                     </controls:UsageInfoRow>
 
                     <!-- Extra Usage row -->
