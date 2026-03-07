@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using H.NotifyIcon;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Toolkit.Uwp.Notifications;
 using Usage4Claude.Services;
 using Usage4Claude.ViewModels;
 using Usage4Claude.Views;
@@ -66,6 +67,9 @@ public partial class App : Application
         var refreshService = Services.GetRequiredService<DataRefreshService>();
         refreshService.Start();
 
+        // Initialize notification service (subscribes to refresh events)
+        var notificationService = Services.GetRequiredService<NotificationService>();
+
         // Wire up left-click on tray icon to show the popup window
         _notifyIcon.TrayLeftMouseDown += (_, _) => ShowPopupWindow();
     }
@@ -105,8 +109,8 @@ public partial class App : Application
         services.AddSingleton<DataRefreshService>();
         services.AddSingleton<IconManager>();
         services.AddSingleton<AutoStartService>();
+        services.AddSingleton<NotificationService>();
         // Future services to be registered as they are implemented:
-        // services.AddSingleton<NotificationService>();
         // services.AddSingleton<LocalizationService>();
         // services.AddSingleton<UpdateCheckService>();
 
@@ -166,7 +170,11 @@ public partial class App : Application
     {
         // Stop background services
         Services.GetService<DataRefreshService>()?.Stop();
+        Services.GetService<NotificationService>()?.Dispose();
         Services.GetService<IconManager>()?.Dispose();
+
+        // Unregister toast notifications
+        try { ToastNotificationManagerCompat.Uninstall(); } catch { }
 
         _notifyIcon?.Dispose();
         _mutex?.ReleaseMutex();
