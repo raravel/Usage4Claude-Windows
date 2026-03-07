@@ -50,6 +50,9 @@ public partial class App : Application
         // Configure DI container
         Services = ConfigureServices();
 
+        // Initialize localization early (before other services that might need localized strings)
+        _ = Services.GetRequiredService<LocalizationService>();
+
         // Initialize system tray icon
         _notifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
 
@@ -65,6 +68,9 @@ public partial class App : Application
         // Start periodic data refresh
         var refreshService = Services.GetRequiredService<DataRefreshService>();
         refreshService.Start();
+
+        // Initialize notification service (subscribes to refresh events)
+        var notificationService = Services.GetRequiredService<NotificationService>();
 
         // Wire up left-click on tray icon to show the popup window
         _notifyIcon.TrayLeftMouseDown += (_, _) => ShowPopupWindow();
@@ -105,9 +111,9 @@ public partial class App : Application
         services.AddSingleton<DataRefreshService>();
         services.AddSingleton<IconManager>();
         services.AddSingleton<AutoStartService>();
+        services.AddSingleton<LocalizationService>();
+        services.AddSingleton<NotificationService>();
         // Future services to be registered as they are implemented:
-        // services.AddSingleton<NotificationService>();
-        // services.AddSingleton<LocalizationService>();
         // services.AddSingleton<UpdateCheckService>();
 
         // ViewModels (Singleton - subscribes to service events)
@@ -166,6 +172,7 @@ public partial class App : Application
     {
         // Stop background services
         Services.GetService<DataRefreshService>()?.Stop();
+        Services.GetService<NotificationService>()?.Dispose();
         Services.GetService<IconManager>()?.Dispose();
 
         _notifyIcon?.Dispose();
