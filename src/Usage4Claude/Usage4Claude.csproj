@@ -16,14 +16,14 @@
     <Company>f-is-h</Company>
     <Copyright>Copyright © 2025 f-is-h</Copyright>
 
-    <!-- Publishing options -->
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>false</SelfContained>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <PublishTrimmed>false</PublishTrimmed>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-
     <!-- Uncomment when app.ico is added: <ApplicationIcon>Resources\app.ico</ApplicationIcon> -->
+  </PropertyGroup>
+
+  <!-- Publishing options (only active during dotnet publish) -->
+  <PropertyGroup Condition="'$(PublishSingleFile)' == 'true'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>

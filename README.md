@@ -15,7 +15,7 @@ A Windows system tray application for monitoring Claude AI usage quotas.
 
 ## Requirements
 
-- Windows 10 (1903) or later
+- Windows 10 (2004) or later
 - .NET 8.0 Runtime (for framework-dependent build)
 - WebView2 Runtime (for browser login feature)
 

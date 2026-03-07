@@ -19,6 +19,9 @@ packages/
 *.DotSettings.user
 *.swp
 
+# Archives
+*.zip
+
 # OS
 Thumbs.db
 desktop.ini
