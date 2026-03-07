@@ -8,6 +8,7 @@ public class DataRefreshService
     private readonly ClaudeApiService _apiService;
     private readonly AccountManager _accountManager;
     private readonly SettingsService _settingsService;
+    private readonly SmartMonitorService _smartMonitor;
 
     private CancellationTokenSource? _timerCts;
     private Task? _timerTask;
@@ -30,11 +31,19 @@ public class DataRefreshService
     private static readonly TimeSpan PopoverRefreshThreshold = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan MinimumAnimationDuration = TimeSpan.FromSeconds(1);
 
-    public DataRefreshService(ClaudeApiService apiService, AccountManager accountManager, SettingsService settingsService)
+    public DataRefreshService(
+        ClaudeApiService apiService,
+        AccountManager accountManager,
+        SettingsService settingsService,
+        SmartMonitorService smartMonitor)
     {
         _apiService = apiService;
         _accountManager = accountManager;
         _settingsService = settingsService;
+        _smartMonitor = smartMonitor;
+
+        // When smart monitor detects a mode change, restart the timer with the new interval
+        _smartMonitor.ModeChanged += OnSmartMonitorModeChanged;
     }
 
     /// <summary>
@@ -79,6 +88,10 @@ public class DataRefreshService
         if (elapsed < ManualRefreshCooldown) return false;
 
         _lastManualRefreshTime = DateTime.UtcNow;
+
+        // Manual refresh resets the smart monitor to active mode
+        _smartMonitor.Reset();
+
         await FetchUsageAsync();
         return true;
     }
@@ -101,10 +114,49 @@ public class DataRefreshService
     /// </summary>
     public Task ForceRefreshAsync() => FetchUsageAsync();
 
-    private async Task RunPeriodicRefreshAsync(TimeSpan interval, CancellationToken cancellationToken)
+    /// <summary>
+    /// Reset state for account switch scenarios.
+    /// </summary>
+    public void Reset()
+    {
+        Stop();
+        LastUsageData = null;
+        LastError = null;
+        _lastRefreshTime = DateTime.MinValue;
+        _lastManualRefreshTime = DateTime.MinValue;
+        _smartMonitor.Reset();
+    }
+
+    private void OnSmartMonitorModeChanged(object? sender, MonitoringMode newMode)
+    {
+        // Only restart timer if we're in Smart refresh mode
+        if (_settingsService.Settings.RefreshMode == RefreshMode.Smart && _timerCts != null && !_timerCts.IsCancellationRequested)
+        {
+            Debug.WriteLine($"[DataRefreshService] Smart monitor mode changed to {newMode}, restarting timer with interval {SmartMonitorService.GetInterval(newMode).TotalSeconds}s");
+            // Restart the periodic timer with the new interval
+            RestartTimer();
+        }
+    }
+
+    private void RestartTimer()
+    {
+        Stop();
+
+        if (!_accountManager.HasAccounts) return;
+
+        var interval = GetRefreshInterval();
+        _timerCts = new CancellationTokenSource();
+        // Don't do an initial fetch on restart — we just fetched
+        _timerTask = RunPeriodicRefreshAsync(interval, _timerCts.Token, skipInitialFetch: true);
+    }
+
+    private async Task RunPeriodicRefreshAsync(TimeSpan interval, CancellationToken cancellationToken, bool skipInitialFetch = false)
     {
         // Initial fetch
-        await FetchUsageAsync();
+        if (!skipInitialFetch)
+        {
+            await FetchUsageAsync();
+        }
 
         // Periodic polling
         using var timer = new PeriodicTimer(interval);
@@ -144,6 +196,12 @@ public class DataRefreshService
             LastError = null;
             _lastRefreshTime = DateTime.UtcNow;
 
+            // Update the smart monitor with current utilization for adaptive polling
+            if (_settingsService.Settings.RefreshMode == RefreshMode.Smart)
+            {
+                _smartMonitor.UpdateUtilization(data.FiveHour?.Percentage ?? 0);
+            }
+
             UsageDataChanged?.Invoke(this, data);
             ErrorChanged?.Invoke(this, null);
         }
@@ -177,7 +235,7 @@ public class DataRefreshService
         var settings = _settingsService.Settings;
         return settings.RefreshMode switch
         {
-            RefreshMode.Smart => TimeSpan.FromMinutes(5), // Default smart interval
+            RefreshMode.Smart => _smartMonitor.CurrentInterval,
             RefreshMode.Fixed => TimeSpan.FromSeconds(
                 Math.Max(30, settings.RefreshIntervalSeconds)), // Minimum 30 seconds
             _ => TimeSpan.FromMinutes(5)
