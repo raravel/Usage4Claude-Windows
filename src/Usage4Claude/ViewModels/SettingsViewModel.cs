@@ -73,6 +73,53 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    // --- Individual LimitType checkbox bindings ---
+
+    public bool ShowFiveHour
+    {
+        get => CustomDisplayTypes.Contains(LimitType.FiveHour);
+        set => ToggleLimitType(LimitType.FiveHour, value);
+    }
+
+    public bool ShowSevenDay
+    {
+        get => CustomDisplayTypes.Contains(LimitType.SevenDay);
+        set => ToggleLimitType(LimitType.SevenDay, value);
+    }
+
+    public bool ShowExtraUsage
+    {
+        get => CustomDisplayTypes.Contains(LimitType.ExtraUsage);
+        set => ToggleLimitType(LimitType.ExtraUsage, value);
+    }
+
+    public bool ShowOpusWeekly
+    {
+        get => CustomDisplayTypes.Contains(LimitType.OpusWeekly);
+        set => ToggleLimitType(LimitType.OpusWeekly, value);
+    }
+
+    public bool ShowSonnetWeekly
+    {
+        get => CustomDisplayTypes.Contains(LimitType.SonnetWeekly);
+        set => ToggleLimitType(LimitType.SonnetWeekly, value);
+    }
+
+    private void ToggleLimitType(LimitType type, bool include)
+    {
+        var types = new List<LimitType>(CustomDisplayTypes);
+        if (include && !types.Contains(type))
+            types.Add(type);
+        else if (!include)
+            types.Remove(type);
+        CustomDisplayTypes = types;
+        OnPropertyChanged(nameof(ShowFiveHour));
+        OnPropertyChanged(nameof(ShowSevenDay));
+        OnPropertyChanged(nameof(ShowExtraUsage));
+        OnPropertyChanged(nameof(ShowOpusWeekly));
+        OnPropertyChanged(nameof(ShowSonnetWeekly));
+    }
+
     // --- Refresh settings ---
 
     public RefreshMode RefreshMode
