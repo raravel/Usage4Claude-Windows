@@ -9,4 +9,26 @@
     <RootNamespace>Usage4Claude</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- System Tray -->
+    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
+
+    <!-- Browser Login -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3800.47" />
+
+    <!-- DI Container -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+
+    <!-- Toast Notifications -->
+    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
+
+    <!-- Icon Rendering -->
+    <PackageReference Include="SkiaSharp" Version="3.119.2" />
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="3.119.2" />
+
+    <!-- Logging -->
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
 </Project>
