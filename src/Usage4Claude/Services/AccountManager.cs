@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Serilog;
 using Usage4Claude.Models;
 
 namespace Usage4Claude.Services;
@@ -79,10 +80,12 @@ public class AccountManager
             _accounts[existing].SessionKey = sessionKey;
             _accounts[existing].OrganizationName = organizationName;
             if (alias != null) _accounts[existing].Alias = alias;
+            Log.Information("Account updated: {OrgName}", organizationName);
         }
         else
         {
             _accounts.Add(account);
+            Log.Information("Account added: {OrgName}", organizationName);
         }
 
         // Auto-select if first account
@@ -103,6 +106,8 @@ public class AccountManager
         var removed = _accounts.RemoveAll(a => a.Id == accountId);
         if (removed == 0) return false;
 
+        Log.Information("Account removed: {AccountId}", accountId);
+
         // If removed the current account, switch to first available
         if (_settingsService.Settings.CurrentAccountId == accountId.ToString())
         {
@@ -122,6 +127,7 @@ public class AccountManager
 
         _settingsService.Settings.CurrentAccountId = accountId.ToString();
         _settingsService.Save();
+        Log.Information("Switched to account: {AccountId}", accountId);
         return true;
     }
 

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using H.NotifyIcon;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using Usage4Claude.Services;
 using Usage4Claude.ViewModels;
 using Usage4Claude.Views;
@@ -31,6 +32,24 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // Initialize logging early (before anything else)
+        var isDebugMode = e.Args.Contains("--debug");
+        LoggingService.Initialize(isDebugMode);
+
+        // Global unhandled exception handlers
+        DispatcherUnhandledException += (_, args) =>
+        {
+            Log.Fatal(args.Exception, "Unhandled exception");
+            args.Handled = false; // Let it crash, but at least log it
+        };
+
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            if (args.ExceptionObject is Exception ex)
+                Log.Fatal(ex, "Unhandled domain exception");
+            Log.CloseAndFlush();
+        };
+
         // Single instance check
         const string mutexName = "Usage4Claude-Windows-SingleInstance";
         _mutex = new Mutex(true, mutexName, out bool isNewInstance);
@@ -171,6 +190,10 @@ public partial class App : Application
         _notifyIcon?.Dispose();
         _mutex?.ReleaseMutex();
         _mutex?.Dispose();
+
+        // Flush and close logging
+        LoggingService.Shutdown();
+
         base.OnExit(e);
     }
 }

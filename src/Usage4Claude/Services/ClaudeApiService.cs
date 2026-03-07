@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
+using Serilog;
 using Usage4Claude.Models;
 
 namespace Usage4Claude.Services;
@@ -73,7 +74,7 @@ public class ClaudeApiService
         catch (Exception ex)
         {
             // Extra usage failure is non-fatal
-            Debug.WriteLine($"[ClaudeApiService] Extra usage fetch failed: {ex.Message}");
+            Log.Warning("[ClaudeApiService] Extra usage fetch failed: {ErrorMessage}", ex.Message);
         }
 
         return ConvertToUsageData(usageResponse, extraResponse);
@@ -244,7 +245,12 @@ public class ClaudeApiService
         while (_recentReports.Count > MaxReportHistory)
             _recentReports.RemoveAt(0);
 
-        Debug.WriteLine(report.ToString());
+        if (report.IsSuccess)
+            Log.Debug("[ClaudeApiService] API request to {Endpoint} succeeded in {ResponseTime}ms",
+                report.Endpoint, report.ResponseTime.TotalMilliseconds);
+        else
+            Log.Warning("[ClaudeApiService] API error on {Endpoint}: {ErrorType} - {ErrorMessage}",
+                report.Endpoint, report.ErrorType, report.ErrorMessage);
     }
 
     /// <summary>

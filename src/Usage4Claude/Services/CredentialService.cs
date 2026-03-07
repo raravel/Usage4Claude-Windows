@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Serilog;
 using Usage4Claude.Models;
 
 namespace Usage4Claude.Services;
@@ -43,12 +44,12 @@ public class CredentialService
         }
         catch (CryptographicException ex)
         {
-            Debug.WriteLine($"[CredentialService] Encryption failed: {ex.Message}");
+            Log.Error(ex, "[CredentialService] Encryption failed");
             return false;
         }
         catch (IOException ex)
         {
-            Debug.WriteLine($"[CredentialService] File write failed: {ex.Message}");
+            Log.Error(ex, "[CredentialService] File write failed");
             return false;
         }
     }
@@ -71,17 +72,17 @@ public class CredentialService
         }
         catch (CryptographicException ex)
         {
-            Debug.WriteLine($"[CredentialService] Decryption failed: {ex.Message}");
+            Log.Error(ex, "[CredentialService] Decryption failed");
             return null;
         }
         catch (IOException ex)
         {
-            Debug.WriteLine($"[CredentialService] File read failed: {ex.Message}");
+            Log.Error(ex, "[CredentialService] File read failed");
             return null;
         }
         catch (JsonException ex)
         {
-            Debug.WriteLine($"[CredentialService] Deserialization failed: {ex.Message}");
+            Log.Error(ex, "[CredentialService] Deserialization failed");
             return null;
         }
     }
@@ -101,7 +102,7 @@ public class CredentialService
         }
         catch (IOException ex)
         {
-            Debug.WriteLine($"[CredentialService] Delete failed: {ex.Message}");
+            Log.Error(ex, "[CredentialService] Delete failed");
             return false;
         }
     }

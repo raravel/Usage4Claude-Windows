@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -45,6 +46,7 @@ public class SettingsViewModel : ViewModelBase
         SetCurrentAccountCommand = new RelayCommand(ExecuteSetCurrentAccount, CanExecuteSetCurrentAccount);
         TestConnectionCommand = new AsyncRelayCommand(ExecuteTestConnectionAsync, CanExecuteTestConnection);
         SaveAccountChangesCommand = new RelayCommand(ExecuteSaveAccountChanges, CanExecuteSaveAccountChanges);
+        OpenLogsFolderCommand = new RelayCommand(ExecuteOpenLogsFolder);
 
         // Load initial accounts
         RefreshAccountsList();
@@ -449,6 +451,7 @@ public class SettingsViewModel : ViewModelBase
     public ICommand SetCurrentAccountCommand { get; }
     public ICommand TestConnectionCommand { get; }
     public ICommand SaveAccountChangesCommand { get; }
+    public ICommand OpenLogsFolderCommand { get; }
 
     // --- Command implementations ---
 
@@ -587,6 +590,19 @@ public class SettingsViewModel : ViewModelBase
         }
 
         RefreshAccountsList();
+    }
+
+    private static void ExecuteOpenLogsFolder()
+    {
+        var logDir = LoggingService.GetLogDirectory();
+        if (Directory.Exists(logDir))
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = logDir,
+                UseShellExecute = true
+            });
+        }
     }
 
     // --- Helpers ---
