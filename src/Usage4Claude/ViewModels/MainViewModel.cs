@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using Usage4Claude.Models;
 using Usage4Claude.Services;
 
@@ -42,6 +43,7 @@ public class MainViewModel : ViewModelBase
     private string _statusText = string.Empty;
     private string _accountDisplayName = string.Empty;
     private bool _hasAccounts;
+    private bool _hasMultipleAccounts;
 
     // Countdown timer
     private DispatcherTimer? _countdownTimer;
@@ -105,10 +107,12 @@ public class MainViewModel : ViewModelBase
     public string StatusText { get => _statusText; private set => SetProperty(ref _statusText, value); }
     public string AccountDisplayName { get => _accountDisplayName; private set => SetProperty(ref _accountDisplayName, value); }
     public bool HasAccounts { get => _hasAccounts; private set => SetProperty(ref _hasAccounts, value); }
+    public bool HasMultipleAccounts { get => _hasMultipleAccounts; private set => SetProperty(ref _hasMultipleAccounts, value); }
 
     // Commands
     public ICommand RefreshCommand { get; }
     public ICommand ToggleDisplayModeCommand { get; }
+    public ICommand CycleAccountCommand { get; }
 
     public MainViewModel(DataRefreshService refreshService, AccountManager accountManager, SmartMonitorService smartMonitor, SettingsService settingsService)
     {
@@ -119,6 +123,7 @@ public class MainViewModel : ViewModelBase
 
         RefreshCommand = new AsyncRelayCommand(async () => await _refreshService.ManualRefreshAsync());
         ToggleDisplayModeCommand = new RelayCommand(() => ShowRemainingMode = !ShowRemainingMode);
+        CycleAccountCommand = new RelayCommand(CycleToNextAccount);
 
         // Subscribe to service events
         _refreshService.UsageDataChanged += OnUsageDataChanged;
@@ -269,7 +274,30 @@ public class MainViewModel : ViewModelBase
     public void UpdateAccountInfo()
     {
         HasAccounts = _accountManager.HasAccounts;
+        HasMultipleAccounts = _accountManager.Accounts.Count > 1;
         AccountDisplayName = _accountManager.CurrentAccount?.DisplayName ?? "No account";
+    }
+
+    private void CycleToNextAccount()
+    {
+        var accounts = _accountManager.Accounts;
+        if (accounts.Count <= 1) return;
+
+        var currentIndex = accounts.ToList().FindIndex(a => a.Id == _accountManager.CurrentAccount?.Id);
+        var nextIndex = (currentIndex + 1) % accounts.Count;
+
+        if (_accountManager.SwitchAccount(accounts[nextIndex].Id))
+        {
+            UpdateAccountInfo();
+
+            // Reset and restart refresh for the new account
+            _refreshService.Reset();
+            _refreshService.Start();
+
+            // Update tray icon
+            var iconManager = App.Current.Services.GetRequiredService<IconManager>();
+            iconManager.RefreshIcon();
+        }
     }
 
     private string FormatResetTime(DateTime? resetTime)
