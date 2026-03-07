@@ -26,6 +26,13 @@ public class UsageError : Exception
         StatusCode = statusCode;
     }
 
+    public UsageError(UsageErrorType errorType, string? message, Exception? innerException, int? statusCode = null)
+        : base(message ?? GetDefaultMessage(errorType), innerException)
+    {
+        ErrorType = errorType;
+        StatusCode = statusCode;
+    }
+
     private static string GetDefaultMessage(UsageErrorType errorType) => errorType switch
     {
         UsageErrorType.InvalidUrl => "Invalid API URL",
