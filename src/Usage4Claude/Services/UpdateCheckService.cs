@@ -27,16 +27,15 @@ public class UpdateCheckService
     }
 
     /// <summary>
-    /// Get the current application version.
+    /// Get the current application version (cached for performance).
     /// </summary>
-    public static string CurrentVersion
+    private static readonly Lazy<string> _currentVersion = new(() =>
     {
-        get
-        {
-            var version = Assembly.GetExecutingAssembly().GetName().Version;
-            return version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : "1.0.0";
-        }
-    }
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        return version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : "1.0.0";
+    });
+
+    public static string CurrentVersion => _currentVersion.Value;
 
     /// <summary>
     /// Check for updates. Returns cached result if checked recently.
@@ -61,8 +60,12 @@ public class UpdateCheckService
                 return _lastResult;
             }
 
-            // Parse version from tag (e.g., "v1.2.3" -> "1.2.3")
+            // Parse version from tag (e.g., "v1.2.3" or "v1.2.3-beta" -> "1.2.3")
             var latestVersionStr = release.TagName.TrimStart('v', 'V');
+            // Strip prerelease suffix for comparison (e.g., "1.2.3-beta.1" -> "1.2.3")
+            var dashIndex = latestVersionStr.IndexOf('-');
+            if (dashIndex >= 0)
+                latestVersionStr = latestVersionStr[..dashIndex];
             var isNewer = IsNewerVersion(latestVersionStr, CurrentVersion);
 
             _lastResult = new UpdateCheckResult

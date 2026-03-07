@@ -711,14 +711,21 @@ public class SettingsViewModel : ViewModelBase
 
     private void ExecuteOpenUpdateUrl()
     {
-        if (!string.IsNullOrEmpty(UpdateUrl))
+        if (string.IsNullOrEmpty(UpdateUrl)) return;
+
+        // Validate URL is a legitimate HTTPS GitHub URL to prevent injection
+        if (!Uri.TryCreate(UpdateUrl, UriKind.Absolute, out var uri) ||
+            uri.Scheme != "https" ||
+            !uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase))
         {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = UpdateUrl,
-                UseShellExecute = true
-            });
+            return;
         }
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = UpdateUrl,
+            UseShellExecute = true
+        });
     }
 }
 
