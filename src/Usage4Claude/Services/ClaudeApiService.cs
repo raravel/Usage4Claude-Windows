@@ -16,6 +16,13 @@ public class ClaudeApiService
     };
 
     private readonly HttpClient _httpClient;
+    private readonly List<DiagnosticReport> _recentReports = new();
+    private const int MaxReportHistory = 50;
+
+    /// <summary>
+    /// Recent API call diagnostic reports for debugging.
+    /// </summary>
+    public IReadOnlyList<DiagnosticReport> RecentDiagnostics => _recentReports.AsReadOnly();
 
     public ClaudeApiService()
     {
@@ -40,8 +47,11 @@ public class ClaudeApiService
         if (string.IsNullOrWhiteSpace(account.SessionKey) || string.IsNullOrWhiteSpace(account.OrganizationId))
             throw new UsageError(UsageErrorType.NoCredentials);
 
-        // Fetch main usage and extra usage in parallel
-        var usageTask = FetchMainUsageAsync(account, cancellationToken);
+        // Fetch main usage with retry, and extra usage in parallel
+        var usageTask = RetryHandler.ExecuteWithRetryAsync(
+            ct => FetchMainUsageAsync(account, ct),
+            maxRetries: 2,
+            cancellationToken: cancellationToken);
         var extraTask = FetchExtraUsageAsync(account, cancellationToken);
 
         UsageResponse usageResponse;
@@ -132,6 +142,8 @@ public class ClaudeApiService
 
     private async Task<T> ExecuteRequestAsync<T>(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        var stopwatch = Stopwatch.StartNew();
+        var endpoint = request.RequestUri?.PathAndQuery ?? "unknown";
         HttpResponseMessage response;
 
         try
@@ -140,19 +152,29 @@ public class ClaudeApiService
         }
         catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
+            stopwatch.Stop();
+            RecordDiagnostic(endpoint, null, stopwatch.Elapsed, false,
+                nameof(UsageErrorType.NetworkError), "Request timed out");
             throw new UsageError(UsageErrorType.NetworkError, "Request timed out");
         }
         catch (HttpRequestException ex)
         {
+            stopwatch.Stop();
+            RecordDiagnostic(endpoint, null, stopwatch.Elapsed, false,
+                nameof(UsageErrorType.NetworkError), ex.Message);
             throw new UsageError(UsageErrorType.NetworkError, ex.Message);
         }
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        stopwatch.Stop();
+        var responsePreview = content.Length > 200 ? content[..200] : content;
 
         // Check for Cloudflare HTML response
         if (content.TrimStart().StartsWith("<!DOCTYPE", StringComparison.OrdinalIgnoreCase) ||
             content.TrimStart().StartsWith("<html", StringComparison.OrdinalIgnoreCase))
         {
+            RecordDiagnostic(endpoint, (int)response.StatusCode, stopwatch.Elapsed, false,
+                nameof(UsageErrorType.CloudflareBlocked), "Cloudflare HTML response detected", responsePreview);
             throw new UsageError(UsageErrorType.CloudflareBlocked, statusCode: (int)response.StatusCode);
         }
 
@@ -164,30 +186,71 @@ public class ClaudeApiService
             {
                 var errorResponse = JsonSerializer.Deserialize<ErrorResponse>(content, JsonOptions);
                 if (errorResponse?.Error.Type == "permission_error")
+                {
+                    RecordDiagnostic(endpoint, (int)response.StatusCode, stopwatch.Elapsed, false,
+                        nameof(UsageErrorType.SessionExpired), "Permission error", responsePreview);
                     throw new UsageError(UsageErrorType.SessionExpired);
+                }
             }
             catch (JsonException) { /* Not a JSON error response */ }
 
-            throw (int)response.StatusCode switch
+            var statusCode = (int)response.StatusCode;
+            var error = statusCode switch
             {
                 401 => new UsageError(UsageErrorType.Unauthorized, statusCode: 401),
                 403 => new UsageError(UsageErrorType.CloudflareBlocked, statusCode: 403),
                 429 => new UsageError(UsageErrorType.RateLimited, statusCode: 429),
-                _ => new UsageError(UsageErrorType.HttpError, $"HTTP {(int)response.StatusCode}", (int)response.StatusCode)
+                _ => new UsageError(UsageErrorType.HttpError, $"HTTP {statusCode}", statusCode)
             };
+
+            RecordDiagnostic(endpoint, statusCode, stopwatch.Elapsed, false,
+                error.ErrorType.ToString(), error.Message, responsePreview);
+            throw error;
         }
 
         // Deserialize response
         try
         {
-            return JsonSerializer.Deserialize<T>(content, JsonOptions)
-                   ?? throw new UsageError(UsageErrorType.NoData);
+            var result = JsonSerializer.Deserialize<T>(content, JsonOptions)
+                         ?? throw new UsageError(UsageErrorType.NoData);
+            RecordDiagnostic(endpoint, (int)response.StatusCode, stopwatch.Elapsed, true);
+            return result;
         }
         catch (JsonException ex)
         {
+            RecordDiagnostic(endpoint, (int)response.StatusCode, stopwatch.Elapsed, false,
+                nameof(UsageErrorType.DecodingError), ex.Message, responsePreview);
             throw new UsageError(UsageErrorType.DecodingError, ex.Message);
         }
     }
+
+    private void RecordDiagnostic(string endpoint, int? httpStatusCode, TimeSpan responseTime,
+        bool isSuccess, string? errorType = null, string? errorMessage = null, string? responsePreview = null)
+    {
+        var report = new DiagnosticReport
+        {
+            Endpoint = endpoint,
+            HttpStatusCode = httpStatusCode,
+            ResponseTime = responseTime,
+            IsSuccess = isSuccess,
+            ErrorType = errorType,
+            ErrorMessage = errorMessage,
+            ResponsePreview = responsePreview
+        };
+
+        _recentReports.Add(report);
+
+        // Trim old reports
+        while (_recentReports.Count > MaxReportHistory)
+            _recentReports.RemoveAt(0);
+
+        Debug.WriteLine(report.ToString());
+    }
+
+    /// <summary>
+    /// Clear all stored diagnostic reports.
+    /// </summary>
+    public void ClearDiagnostics() => _recentReports.Clear();
 
     private static UsageData ConvertToUsageData(UsageResponse usage, ExtraUsageResponse? extra)
     {
