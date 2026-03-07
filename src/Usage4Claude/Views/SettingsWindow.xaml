@@ -68,6 +68,7 @@
                          IsChecked="True" Style="{StaticResource TabButtonStyle}" />
             <Rectangle Width="1" Fill="#CCCCCC" Margin="8,4" />
             <RadioButton x:Name="AuthTab" Content="&#x1F511; Auth"
+                         FontFamily="Segoe UI Emoji"
                          Style="{StaticResource TabButtonStyle}" />
             <Rectangle Width="1" Fill="#CCCCCC" Margin="8,4" />
             <RadioButton x:Name="AboutTab" Content="&#x2139; About"

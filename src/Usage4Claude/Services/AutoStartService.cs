@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Win32;
 
 namespace Usage4Claude.Services;
@@ -29,6 +30,11 @@ public class AutoStartService
         {
             var exePath = Environment.ProcessPath
                           ?? System.Reflection.Assembly.GetExecutingAssembly().Location;
+            if (string.IsNullOrEmpty(exePath))
+            {
+                Debug.WriteLine("[AutoStartService] Cannot determine executable path for auto-start.");
+                return;
+            }
             key.SetValue(AppName, $"\"{exePath}\"");
         }
     }

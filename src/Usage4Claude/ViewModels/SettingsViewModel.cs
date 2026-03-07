@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using Usage4Claude.Models;
@@ -102,6 +103,7 @@ public class SettingsViewModel : ViewModelBase
         get => _settingsService.Settings.CustomDisplayTypes;
         set
         {
+            if (_settingsService.Settings.CustomDisplayTypes.SequenceEqual(value)) return;
             _settingsService.Settings.CustomDisplayTypes = value;
             OnPropertyChanged();
             Save();
@@ -145,7 +147,7 @@ public class SettingsViewModel : ViewModelBase
         var types = new List<LimitType>(CustomDisplayTypes);
         if (include && !types.Contains(type))
             types.Add(type);
-        else if (!include)
+        else if (!include && types.Contains(type) && types.Count > 1)
             types.Remove(type);
         CustomDisplayTypes = types;
         OnPropertyChanged(nameof(ShowFiveHour));
@@ -236,25 +238,24 @@ public class SettingsViewModel : ViewModelBase
         get => _settingsService.Settings.LaunchAtLogin;
         set
         {
-            if (_settingsService.Settings.LaunchAtLogin != value)
-            {
-                _settingsService.Settings.LaunchAtLogin = value;
-                OnPropertyChanged();
-                Save();
+            if (_settingsService.Settings.LaunchAtLogin == value) return;
 
-                // Actually toggle the Windows Registry auto-start entry
-                try
-                {
-                    if (value)
-                        _autoStartService.EnableAutoStart();
-                    else
-                        _autoStartService.DisableAutoStart();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[Settings] Auto-start toggle failed: {ex.Message}");
-                }
+            try
+            {
+                if (value)
+                    _autoStartService.EnableAutoStart();
+                else
+                    _autoStartService.DisableAutoStart();
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[SettingsViewModel] Failed to update auto-start: {ex.Message}");
+                return;
+            }
+
+            _settingsService.Settings.LaunchAtLogin = value;
+            OnPropertyChanged();
+            Save();
         }
     }
 
@@ -349,6 +350,9 @@ public class SettingsViewModel : ViewModelBase
             if (SetProperty(ref _selectedAccount, value))
             {
                 OnPropertyChanged(nameof(HasSelectedAccount));
+                (RemoveAccountCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (SetCurrentAccountCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (TestConnectionCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
                 PopulateEditFields();
             }
         }
@@ -386,14 +390,22 @@ public class SettingsViewModel : ViewModelBase
     public string NewOrgId
     {
         get => _newOrgId;
-        set => SetProperty(ref _newOrgId, value);
+        set
+        {
+            if (SetProperty(ref _newOrgId, value))
+                (AddAccountCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
     }
 
     private string _newSessionKey = string.Empty;
     public string NewSessionKey
     {
         get => _newSessionKey;
-        set => SetProperty(ref _newSessionKey, value);
+        set
+        {
+            if (SetProperty(ref _newSessionKey, value))
+                (AddAccountCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
     }
 
     private string _newDisplayName = string.Empty;

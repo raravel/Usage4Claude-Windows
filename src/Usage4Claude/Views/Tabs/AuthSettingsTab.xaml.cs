@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -12,6 +13,8 @@ public partial class AuthSettingsTab : UserControl
 {
     private bool _isEditSessionKeyVisible;
     private bool _suppressPasswordSync;
+    private ViewModels.SettingsViewModel? _subscribedVm;
+    private PropertyChangedEventHandler? _vmPropertyChangedHandler;
 
     public AuthSettingsTab()
     {
@@ -19,13 +22,22 @@ public partial class AuthSettingsTab : UserControl
 
         // When the selected account changes, update the edit PasswordBox
         DataContextChanged += OnDataContextChanged;
+        Unloaded += OnUnloaded;
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
+        // Unsubscribe from old VM to prevent memory leaks
+        if (_subscribedVm != null && _vmPropertyChangedHandler != null)
+        {
+            _subscribedVm.PropertyChanged -= _vmPropertyChangedHandler;
+            _subscribedVm = null;
+            _vmPropertyChangedHandler = null;
+        }
+
         if (e.NewValue is ViewModels.SettingsViewModel vm)
         {
-            vm.PropertyChanged += (_, args) =>
+            _vmPropertyChangedHandler = (_, args) =>
             {
                 if (args.PropertyName == nameof(vm.EditSessionKey) && !_suppressPasswordSync)
                 {
@@ -33,7 +45,25 @@ public partial class AuthSettingsTab : UserControl
                     EditSessionKeyBox.Password = vm.EditSessionKey;
                     _suppressPasswordSync = false;
                 }
+                if (args.PropertyName == nameof(vm.NewSessionKey) && !_suppressPasswordSync)
+                {
+                    _suppressPasswordSync = true;
+                    NewSessionKeyBox.Password = vm.NewSessionKey;
+                    _suppressPasswordSync = false;
+                }
             };
+            vm.PropertyChanged += _vmPropertyChangedHandler;
+            _subscribedVm = vm;
+        }
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        if (_subscribedVm != null && _vmPropertyChangedHandler != null)
+        {
+            _subscribedVm.PropertyChanged -= _vmPropertyChangedHandler;
+            _subscribedVm = null;
+            _vmPropertyChangedHandler = null;
         }
     }
 
