@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Input;
 using Usage4Claude.Models;
 using Usage4Claude.Services;
@@ -59,7 +60,7 @@ public class MainViewModel : ViewModelBase
         _accountManager = accountManager;
         _smartMonitor = smartMonitor;
 
-        RefreshCommand = new RelayCommand(async () => await _refreshService.ManualRefreshAsync());
+        RefreshCommand = new AsyncRelayCommand(async () => await _refreshService.ManualRefreshAsync());
 
         // Subscribe to service events
         _refreshService.UsageDataChanged += OnUsageDataChanged;
@@ -74,44 +75,54 @@ public class MainViewModel : ViewModelBase
     {
         if (data == null) return;
 
-        // Five hour (always present)
-        FiveHourPercentage = data.FiveHour?.Percentage ?? 0;
-        FiveHourResetTime = FormatResetTime(data.FiveHour?.ResetsAt);
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            // Five hour (always present)
+            FiveHourPercentage = data.FiveHour?.Percentage ?? 0;
+            FiveHourResetTime = FormatResetTime(data.FiveHour?.ResetsAt);
 
-        // Seven day
-        SevenDayPercentage = data.SevenDay?.Percentage;
-        SevenDayResetTime = FormatResetTime(data.SevenDay?.ResetsAt);
+            // Seven day
+            SevenDayPercentage = data.SevenDay?.Percentage;
+            SevenDayResetTime = FormatResetTime(data.SevenDay?.ResetsAt);
 
-        // Model-specific
-        OpusPercentage = data.Opus?.Percentage;
-        SonnetPercentage = data.Sonnet?.Percentage;
+            // Model-specific
+            OpusPercentage = data.Opus?.Percentage;
+            SonnetPercentage = data.Sonnet?.Percentage;
 
-        // Extra usage
-        HasExtraUsage = data.ExtraUsage?.Enabled == true;
-        ExtraUsagePercentage = data.ExtraUsage?.Percentage;
-        ExtraUsageText = FormatExtraUsage(data.ExtraUsage);
+            // Extra usage
+            HasExtraUsage = data.ExtraUsage?.Enabled == true;
+            ExtraUsagePercentage = data.ExtraUsage?.Percentage;
+            ExtraUsageText = FormatExtraUsage(data.ExtraUsage);
 
-        // Status
-        HasError = false;
-        ErrorMessage = string.Empty;
-        StatusText = $"Updated {DateTime.Now:HH:mm:ss}";
+            // Status
+            HasError = false;
+            ErrorMessage = string.Empty;
+            StatusText = $"Updated {DateTime.Now:HH:mm:ss}";
+        });
     }
 
     private void OnErrorChanged(object? sender, UsageError? error)
     {
         if (error == null) return;
-        HasError = true;
-        ErrorMessage = error.Message;
-        StatusText = $"Error: {error.ErrorType}";
+
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            HasError = true;
+            ErrorMessage = error.Message;
+            StatusText = $"Error: {error.ErrorType}";
+        });
     }
 
     private void OnRefreshingChanged(object? sender, bool isRefreshing)
     {
-        IsRefreshing = isRefreshing;
-        if (isRefreshing)
+        Application.Current.Dispatcher.Invoke(() =>
         {
-            StatusText = "Refreshing...";
-        }
+            IsRefreshing = isRefreshing;
+            if (isRefreshing)
+            {
+                StatusText = "Refreshing...";
+            }
+        });
     }
 
     public void UpdateAccountInfo()

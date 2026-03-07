@@ -72,8 +72,8 @@ public partial class App : Application
         // services.AddSingleton<LocalizationService>();
         // services.AddSingleton<UpdateCheckService>();
 
-        // ViewModels (Transient)
-        services.AddTransient<MainViewModel>();
+        // ViewModels (Singleton - subscribes to service events)
+        services.AddSingleton<MainViewModel>();
         // services.AddTransient<SettingsViewModel>();
 
         return services.BuildServiceProvider();
