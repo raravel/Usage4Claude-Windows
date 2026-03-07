@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Usage4Claude.Models;
 using Usage4Claude.Services;
 
@@ -222,12 +223,13 @@ public class SettingsViewModel : ViewModelBase
         get => _settingsService.Settings.Language;
         set
         {
-            if (_settingsService.Settings.Language != value)
-            {
-                _settingsService.Settings.Language = value;
-                OnPropertyChanged();
-                Save();
-            }
+            if (_settingsService.Settings.Language == value) return;
+            _settingsService.Settings.Language = value;
+            OnPropertyChanged();
+            Save();
+
+            var localization = App.Current.Services.GetRequiredService<LocalizationService>();
+            localization.ChangeLanguage(value);
         }
     }
 

@@ -56,6 +56,7 @@ public class LocalizationService
 
         var culture = new CultureInfo(cultureName);
         CultureInfo.CurrentUICulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
         Thread.CurrentThread.CurrentUICulture = culture;
     }
 }

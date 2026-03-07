@@ -51,7 +51,7 @@ public partial class App : Application
         Services = ConfigureServices();
 
         // Initialize localization early (before other services that might need localized strings)
-        var localization = Services.GetRequiredService<LocalizationService>();
+        _ = Services.GetRequiredService<LocalizationService>();
 
         // Initialize system tray icon
         _notifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
