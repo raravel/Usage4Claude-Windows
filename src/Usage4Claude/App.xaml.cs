@@ -63,6 +63,7 @@ public partial class App : Application
         services.AddSingleton<SettingsService>();
         services.AddSingleton<ClaudeApiService>();
         services.AddSingleton<CredentialService>();
+        services.AddSingleton<AccountManager>();
         // Future services to be registered as they are implemented:
         // services.AddSingleton<DataRefreshService>();
         // services.AddSingleton<NotificationService>();
