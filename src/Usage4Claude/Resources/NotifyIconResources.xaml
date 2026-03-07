@@ -5,10 +5,10 @@
     <ContextMenu x:Key="SysTrayMenu" x:Shared="false">
         <MenuItem Header="Usage4Claude" IsEnabled="False" FontWeight="Bold" />
         <Separator />
-        <MenuItem Header="새로고침" Tag="Refresh" />
-        <MenuItem Header="설정..." Tag="Settings" />
+        <MenuItem Header="Refresh" Tag="Refresh" />
+        <MenuItem Header="Settings..." Tag="Settings" />
         <Separator />
-        <MenuItem Header="종료" Tag="Exit" />
+        <MenuItem Header="Exit" Tag="Exit" />
     </ContextMenu>
 
     <tb:TaskbarIcon x:Key="NotifyIcon"

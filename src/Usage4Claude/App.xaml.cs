@@ -50,6 +50,9 @@ public partial class App : Application
         // Configure DI container
         Services = ConfigureServices();
 
+        // Initialize localization early (before other services that might need localized strings)
+        _ = Services.GetRequiredService<LocalizationService>();
+
         // Initialize system tray icon
         _notifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
 
@@ -108,9 +111,9 @@ public partial class App : Application
         services.AddSingleton<DataRefreshService>();
         services.AddSingleton<IconManager>();
         services.AddSingleton<AutoStartService>();
+        services.AddSingleton<LocalizationService>();
         services.AddSingleton<NotificationService>();
         // Future services to be registered as they are implemented:
-        // services.AddSingleton<LocalizationService>();
         // services.AddSingleton<UpdateCheckService>();
 
         // ViewModels (Singleton - subscribes to service events)
