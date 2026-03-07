@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Usage4Claude.Models;
 using Usage4Claude.Services;
 
@@ -45,6 +46,7 @@ public class SettingsViewModel : ViewModelBase
         SetCurrentAccountCommand = new RelayCommand(ExecuteSetCurrentAccount, CanExecuteSetCurrentAccount);
         TestConnectionCommand = new AsyncRelayCommand(ExecuteTestConnectionAsync, CanExecuteTestConnection);
         SaveAccountChangesCommand = new RelayCommand(ExecuteSaveAccountChanges, CanExecuteSaveAccountChanges);
+        TestNotificationCommand = new RelayCommand(ExecuteTestNotification);
 
         // Load initial accounts
         RefreshAccountsList();
@@ -222,12 +224,13 @@ public class SettingsViewModel : ViewModelBase
         get => _settingsService.Settings.Language;
         set
         {
-            if (_settingsService.Settings.Language != value)
-            {
-                _settingsService.Settings.Language = value;
-                OnPropertyChanged();
-                Save();
-            }
+            if (_settingsService.Settings.Language == value) return;
+            _settingsService.Settings.Language = value;
+            OnPropertyChanged();
+            Save();
+
+            var localization = App.Current.Services.GetRequiredService<LocalizationService>();
+            localization.ChangeLanguage(value);
         }
     }
 
@@ -449,6 +452,7 @@ public class SettingsViewModel : ViewModelBase
     public ICommand SetCurrentAccountCommand { get; }
     public ICommand TestConnectionCommand { get; }
     public ICommand SaveAccountChangesCommand { get; }
+    public ICommand TestNotificationCommand { get; }
 
     // --- Command implementations ---
 
@@ -564,6 +568,12 @@ public class SettingsViewModel : ViewModelBase
         {
             IsDiagnosticRunning = false;
         }
+    }
+
+    private void ExecuteTestNotification()
+    {
+        var notificationService = App.Current.Services.GetRequiredService<NotificationService>();
+        notificationService.SendTestNotification();
     }
 
     private bool CanExecuteSaveAccountChanges() => SelectedAccount != null;

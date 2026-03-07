@@ -185,9 +185,17 @@
         <Border Style="{StaticResource CardBorder}">
             <StackPanel>
                 <TextBlock Style="{StaticResource SectionTitle}" Text="Notifications" />
-                <CheckBox Style="{StaticResource OptionCheckBox}"
-                          Content="Enable notifications"
-                          IsChecked="{Binding NotificationsEnabled}" />
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Style="{StaticResource OptionCheckBox}"
+                              Content="Enable notifications"
+                              IsChecked="{Binding NotificationsEnabled}" />
+                    <Button Content="Test"
+                            Command="{Binding TestNotificationCommand}"
+                            Margin="8,0,0,0"
+                            Padding="8,2"
+                            FontSize="11"
+                            VerticalAlignment="Center" />
+                </StackPanel>
                 <TextBlock Style="{StaticResource HintText}"
                            Text="Receive alerts when usage limits are approaching or reset." />
             </StackPanel>
