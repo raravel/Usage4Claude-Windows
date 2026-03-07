@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using H.NotifyIcon;
@@ -17,6 +18,9 @@ namespace Usage4Claude.Services;
 /// </summary>
 public class IconManager : IDisposable
 {
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool DestroyIcon(IntPtr hIcon);
+
     private readonly SettingsService _settingsService;
     private readonly DataRefreshService _refreshService;
     private readonly IconCache _iconCache = new();
@@ -54,13 +58,13 @@ public class IconManager : IDisposable
 
     private void OnUsageDataChanged(object? sender, UsageData? data)
     {
-        Application.Current?.Dispatcher.Invoke(() => UpdateIcon(data));
+        Application.Current?.Dispatcher.BeginInvoke(() => UpdateIcon(data));
     }
 
     private void OnRefreshingChanged(object? sender, bool isRefreshing)
     {
         if (!isRefreshing || _taskbarIcon == null) return;
-        Application.Current?.Dispatcher.Invoke(() =>
+        Application.Current?.Dispatcher.BeginInvoke(() =>
         {
             _taskbarIcon.ToolTipText = "Usage4Claude - Refreshing...";
         });
@@ -143,7 +147,16 @@ public class IconManager : IDisposable
         // Load into System.Drawing.Bitmap, then convert to Icon via HICON
         using var drawingBitmap = new Bitmap(memoryStream);
         var hIcon = drawingBitmap.GetHicon();
-        return Icon.FromHandle(hIcon);
+        try
+        {
+            // Icon.FromHandle does not take ownership of hIcon, so we must clone and destroy
+            using var tempIcon = Icon.FromHandle(hIcon);
+            return (Icon)tempIcon.Clone();
+        }
+        finally
+        {
+            DestroyIcon(hIcon);
+        }
     }
 
     public void Dispose()
