@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using H.NotifyIcon;
 using Microsoft.Extensions.DependencyInjection;
 using Usage4Claude.Services;
+using Usage4Claude.ViewModels;
 
 namespace Usage4Claude;
 
@@ -71,8 +72,8 @@ public partial class App : Application
         // services.AddSingleton<LocalizationService>();
         // services.AddSingleton<UpdateCheckService>();
 
-        // ViewModels (Transient) - to be registered as they are implemented:
-        // services.AddTransient<MainViewModel>();
+        // ViewModels (Transient)
+        services.AddTransient<MainViewModel>();
         // services.AddTransient<SettingsViewModel>();
 
         return services.BuildServiceProvider();
