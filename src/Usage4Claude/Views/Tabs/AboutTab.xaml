@@ -27,6 +27,36 @@
             <Setter Property="Margin" Value="0,4,0,0" />
         </Style>
 
+        <!-- Action button style -->
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background" Value="#E8E8E8" />
+            <Setter Property="Foreground" Value="#333333" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ActionBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ActionBorder" Property="Background" Value="#D0D0D0" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ActionBorder" Property="Background" Value="#C0C0C0" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Link button style -->
         <Style x:Key="LinkButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
@@ -182,6 +212,18 @@
                 <TextBlock FontSize="12" Foreground="#888888">
                     <Run Text="Ported to Windows by " /><Run Text="Claude Code" FontWeight="SemiBold" />
                 </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Diagnostics Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Diagnostics" />
+                <TextBlock Style="{StaticResource HintText}" Text="View application logs for troubleshooting." Margin="0,0,0,8" />
+                <Button Content="Open Logs Folder"
+                        Style="{StaticResource ActionButton}"
+                        Command="{Binding OpenLogsFolderCommand}"
+                        HorizontalAlignment="Left" />
             </StackPanel>
         </Border>
 

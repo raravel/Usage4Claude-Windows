@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Serilog;
 using Usage4Claude.Models;
 
 namespace Usage4Claude.Services;
@@ -132,7 +133,8 @@ public class DataRefreshService
         // Only restart timer if we're in Smart refresh mode
         if (_settingsService.Settings.RefreshMode == RefreshMode.Smart && _timerCts != null && !_timerCts.IsCancellationRequested)
         {
-            Debug.WriteLine($"[DataRefreshService] Smart monitor mode changed to {newMode}, restarting timer with interval {SmartMonitorService.GetInterval(newMode).TotalSeconds}s");
+            Log.Information("[DataRefreshService] Smart monitor mode changed to {NewMode}, restarting timer with interval {IntervalSeconds}s",
+                newMode, SmartMonitorService.GetInterval(newMode).TotalSeconds);
             // Restart the periodic timer with the new interval
             RestartTimer();
         }
@@ -209,14 +211,14 @@ public class DataRefreshService
         {
             LastError = ex;
             ErrorChanged?.Invoke(this, ex);
-            Debug.WriteLine($"[DataRefreshService] Fetch failed: {ex.ErrorType} - {ex.Message}");
+            Log.Warning("[DataRefreshService] Fetch failed: {ErrorType} - {Message}", ex.ErrorType, ex.Message);
         }
         catch (Exception ex)
         {
             var error = new UsageError(UsageErrorType.NetworkError, ex.Message);
             LastError = error;
             ErrorChanged?.Invoke(this, error);
-            Debug.WriteLine($"[DataRefreshService] Unexpected error: {ex.Message}");
+            Log.Error(ex, "[DataRefreshService] Unexpected error during fetch");
         }
         finally
         {
