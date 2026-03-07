@@ -54,6 +54,10 @@ public partial class App : Application
         WireUpContextMenu();
 
         _notifyIcon.ForceCreate(enablesEfficiencyMode: false);
+
+        // Initialize the icon manager to handle dynamic tray icon updates
+        var iconManager = Services.GetRequiredService<IconManager>();
+        iconManager.Initialize(_notifyIcon);
     }
 
     private static IServiceProvider ConfigureServices()
@@ -67,6 +71,7 @@ public partial class App : Application
         services.AddSingleton<AccountManager>();
         services.AddSingleton<SmartMonitorService>();
         services.AddSingleton<DataRefreshService>();
+        services.AddSingleton<IconManager>();
         // Future services to be registered as they are implemented:
         // services.AddSingleton<NotificationService>();
         // services.AddSingleton<LocalizationService>();
@@ -102,6 +107,7 @@ public partial class App : Application
     {
         // Stop background services
         Services.GetService<DataRefreshService>()?.Stop();
+        Services.GetService<IconManager>()?.Dispose();
 
         _notifyIcon?.Dispose();
         _mutex?.ReleaseMutex();

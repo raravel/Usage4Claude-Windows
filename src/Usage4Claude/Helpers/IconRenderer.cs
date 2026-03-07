@@ -8,6 +8,8 @@ namespace Usage4Claude.Helpers;
 /// <summary>
 /// Renders dynamic system tray icons using SkiaSharp.
 /// Creates circular progress indicators with percentage text overlay.
+/// Supports multiple display modes (text only, ring only, both) and
+/// style modes (colored, monochrome).
 /// </summary>
 public static class IconRenderer
 {
@@ -23,10 +25,20 @@ public static class IconRenderer
     private static readonly SKColor BackgroundArcColor = new(200, 200, 200, 80); // Light gray
     private static readonly SKColor IconBackgroundColor = new(107, 92, 231); // Purple (#6B5CE7) - app brand
 
+    // Monochrome palette
+    private static readonly SKColor MonoBackgroundColor = new(80, 80, 80);       // Dark gray background
+    private static readonly SKColor MonoTrackColor = new(160, 160, 160, 80);     // Light gray track
+    private static readonly SKColor MonoProgressColor = new(220, 220, 220);      // Near-white progress
+
     /// <summary>
-    /// Render a circular progress icon with percentage text.
+    /// Render a circular progress icon with optional percentage text and progress ring.
     /// </summary>
-    public static BitmapSource RenderIcon(double percentage, bool showText = true)
+    /// <param name="percentage">Usage percentage (0-100).</param>
+    /// <param name="showText">Whether to draw the percentage number in the center.</param>
+    /// <param name="showRing">Whether to draw the circular progress arc.</param>
+    /// <param name="monochrome">When true, use grayscale colors instead of the colored palette.</param>
+    public static BitmapSource RenderIcon(double percentage, bool showText = true,
+        bool showRing = true, bool monochrome = false)
     {
         percentage = Math.Clamp(percentage, 0, 100);
 
@@ -37,58 +49,70 @@ public static class IconRenderer
         var center = IconSize / 2f;
         var radius = (IconSize - StrokeWidth) / 2f - 2f; // Padding for anti-aliasing
 
+        var bgColor = monochrome ? MonoBackgroundColor : IconBackgroundColor;
+
         // Draw background circle (filled)
         using (var bgPaint = new SKPaint
         {
             Style = SKPaintStyle.Fill,
-            Color = IconBackgroundColor,
+            Color = bgColor,
             IsAntialias = true
         })
         {
             canvas.DrawCircle(center, center, radius, bgPaint);
         }
 
-        // Draw background arc track
-        var arcRect = new SKRect(
-            center - radius + StrokeWidth / 2,
-            center - radius + StrokeWidth / 2,
-            center + radius - StrokeWidth / 2,
-            center + radius - StrokeWidth / 2);
-
-        using (var trackPaint = new SKPaint
+        // Draw progress ring if enabled
+        if (showRing)
         {
-            Style = SKPaintStyle.Stroke,
-            StrokeWidth = StrokeWidth,
-            Color = BackgroundArcColor,
-            IsAntialias = true,
-            StrokeCap = SKStrokeCap.Round
-        })
-        {
-            canvas.DrawArc(arcRect, 0, 360, false, trackPaint);
-        }
+            var arcRect = new SKRect(
+                center - radius + StrokeWidth / 2,
+                center - radius + StrokeWidth / 2,
+                center + radius - StrokeWidth / 2,
+                center + radius - StrokeWidth / 2);
 
-        // Draw progress arc
-        if (percentage > 0)
-        {
-            var sweepAngle = (float)(percentage / 100.0 * 360.0);
-            var progressColor = GetColorForPercentage(percentage);
+            var trackColor = monochrome ? MonoTrackColor : BackgroundArcColor;
 
-            using var progressPaint = new SKPaint
+            // Draw background arc track
+            using (var trackPaint = new SKPaint
             {
                 Style = SKPaintStyle.Stroke,
                 StrokeWidth = StrokeWidth,
-                Color = progressColor,
+                Color = trackColor,
                 IsAntialias = true,
                 StrokeCap = SKStrokeCap.Round
-            };
+            })
+            {
+                canvas.DrawArc(arcRect, 0, 360, false, trackPaint);
+            }
 
-            canvas.DrawArc(arcRect, StartAngle, sweepAngle, false, progressPaint);
+            // Draw progress arc
+            if (percentage > 0)
+            {
+                var sweepAngle = (float)(percentage / 100.0 * 360.0);
+                var progressColor = monochrome
+                    ? MonoProgressColor
+                    : GetColorForPercentage(percentage);
+
+                using var progressPaint = new SKPaint
+                {
+                    Style = SKPaintStyle.Stroke,
+                    StrokeWidth = StrokeWidth,
+                    Color = progressColor,
+                    IsAntialias = true,
+                    StrokeCap = SKStrokeCap.Round
+                };
+
+                canvas.DrawArc(arcRect, StartAngle, sweepAngle, false, progressPaint);
+            }
         }
 
         // Draw percentage text
         if (showText)
         {
-            DrawCenteredText(canvas, ((int)percentage).ToString(), center, IconSize * 0.38f);
+            // When showing text without ring, use a slightly larger font for better readability
+            var fontSize = showRing ? IconSize * 0.38f : IconSize * 0.44f;
+            DrawCenteredText(canvas, ((int)percentage).ToString(), center, fontSize);
         }
 
         // Convert SkiaSharp surface to WPF BitmapSource
@@ -98,7 +122,8 @@ public static class IconRenderer
     /// <summary>
     /// Render a simple text icon (e.g., "C" for default/no-data state).
     /// </summary>
-    public static BitmapSource RenderDefaultIcon()
+    /// <param name="monochrome">When true, use grayscale background.</param>
+    public static BitmapSource RenderDefaultIcon(bool monochrome = false)
     {
         using var surface = SKSurface.Create(new SKImageInfo(IconSize, IconSize, SKColorType.Rgba8888, SKAlphaType.Premul));
         var canvas = surface.Canvas;
@@ -107,11 +132,13 @@ public static class IconRenderer
         var center = IconSize / 2f;
         var radius = (IconSize - StrokeWidth) / 2f - 2f;
 
-        // Purple background circle
+        var bgColor = monochrome ? MonoBackgroundColor : IconBackgroundColor;
+
+        // Background circle
         using (var bgPaint = new SKPaint
         {
             Style = SKPaintStyle.Fill,
-            Color = IconBackgroundColor,
+            Color = bgColor,
             IsAntialias = true
         })
         {
