@@ -15,6 +15,7 @@ public partial class LoginWindow : Window
 {
     private DispatcherTimer? _cookieTimer;
     private bool _sessionKeyFound;
+    private bool _isCheckingCookies;
 
     /// <summary>
     /// The extracted session key from the Claude.ai cookie, available after successful login.
@@ -71,7 +72,6 @@ public partial class LoginWindow : Window
 
         // Subscribe to navigation-based detection events
         WebView.CoreWebView2.NavigationCompleted += OnNavigationCompleted;
-        WebView.CoreWebView2.SourceChanged += OnSourceChanged;
 
         StatusText.Text = "Loading login page...";
 
@@ -105,21 +105,6 @@ public partial class LoginWindow : Window
     }
 
     /// <summary>
-    /// Triggered when the source URL changes. If it changed from a login URL to a main URL,
-    /// trigger immediate cookie check.
-    /// </summary>
-    private async void OnSourceChanged(object? sender, CoreWebView2SourceChangedEventArgs e)
-    {
-        if (_sessionKeyFound || WebView?.CoreWebView2 == null) return;
-
-        var uri = WebView.CoreWebView2.Source;
-        if (IsLoggedInUrl(uri))
-        {
-            await CheckForSessionKeyCookieAsync();
-        }
-    }
-
-    /// <summary>
     /// Determines if a URL indicates the user has moved past the login page.
     /// </summary>
     private static bool IsLoggedInUrl(string? uri)
@@ -142,9 +127,10 @@ public partial class LoginWindow : Window
     /// </summary>
     private async Task CheckForSessionKeyCookieAsync()
     {
-        if (_sessionKeyFound || WebView?.CoreWebView2 == null)
+        if (_sessionKeyFound || _isCheckingCookies || WebView?.CoreWebView2 == null)
             return;
 
+        _isCheckingCookies = true;
         try
         {
             var cookies = await WebView.CoreWebView2.CookieManager
@@ -179,6 +165,10 @@ public partial class LoginWindow : Window
         {
             Debug.WriteLine($"[LoginWindow] Cookie check failed: {ex.Message}");
         }
+        finally
+        {
+            _isCheckingCookies = false;
+        }
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -197,7 +187,6 @@ public partial class LoginWindow : Window
         if (WebView?.CoreWebView2 != null)
         {
             WebView.CoreWebView2.NavigationCompleted -= OnNavigationCompleted;
-            WebView.CoreWebView2.SourceChanged -= OnSourceChanged;
         }
 
         // Dispose WebView2

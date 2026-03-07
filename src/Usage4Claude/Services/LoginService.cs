@@ -73,7 +73,14 @@ public class LoginService
             // 3. Single org: auto-add without showing the dialog
             if (orgs.Count == 1)
             {
-                return _accountManager.AddAccount(sessionKey, orgs[0].Uuid, orgs[0].Name);
+                var selectedOrg = orgs[0];
+                var added = _accountManager.AddAccount(sessionKey, selectedOrg.Uuid, selectedOrg.Name);
+                if (!added)
+                {
+                    MessageBox.Show("Failed to save account credentials.", "Login Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                return added;
             }
 
             // 4. Multiple orgs: let user select multiple
@@ -86,6 +93,12 @@ public class LoginService
             {
                 if (_accountManager.AddAccount(sessionKey, org.Uuid, org.Name))
                     anyAdded = true;
+            }
+
+            if (!anyAdded)
+            {
+                MessageBox.Show("Failed to save account credentials.", "Login Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
             return anyAdded;
@@ -103,19 +116,24 @@ public class LoginService
     /// </summary>
     private static void CleanupWebView2Data()
     {
-        try
+        Task.Run(async () =>
         {
-            var userDataFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Usage4Claude",
-                "WebView2");
+            // Wait for WebView2 process to fully exit
+            await Task.Delay(2000);
+            try
+            {
+                var userDataFolder = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "Usage4Claude",
+                    "WebView2");
 
-            if (Directory.Exists(userDataFolder))
-                Directory.Delete(userDataFolder, recursive: true);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[LoginService] WebView2 cleanup failed: {ex.Message}");
-        }
+                if (Directory.Exists(userDataFolder))
+                    Directory.Delete(userDataFolder, recursive: true);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LoginService] WebView2 cleanup failed: {ex.Message}");
+            }
+        });
     }
 }

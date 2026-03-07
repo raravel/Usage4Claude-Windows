@@ -595,9 +595,11 @@ public class SettingsViewModel : ViewModelBase
 
     private async Task ExecuteBrowserLoginAsync()
     {
-        var loginService = App.Current.Services.GetRequiredService<LoginService>();
         var owner = Application.Current.Windows.OfType<SettingsWindow>().FirstOrDefault();
-        var success = await loginService.StartLoginFlowAsync(owner!);
+        if (owner == null) return;
+
+        var loginService = App.Current.Services.GetRequiredService<LoginService>();
+        var success = await loginService.StartLoginFlowAsync(owner);
         if (success)
         {
             RefreshAccountsList();
