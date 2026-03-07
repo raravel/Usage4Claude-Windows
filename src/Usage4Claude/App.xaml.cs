@@ -53,6 +53,22 @@ public partial class App : Application
         // Initialize localization early (before other services that might need localized strings)
         _ = Services.GetRequiredService<LocalizationService>();
 
+        // Show welcome window on first launch
+        var settingsService = Services.GetRequiredService<SettingsService>();
+        if (settingsService.Settings.IsFirstLaunch)
+        {
+            var welcomeWindow = new WelcomeWindow();
+            welcomeWindow.ShowDialog();
+            // Settings are saved by WelcomeWindow.Finish_Click
+            // If the user closed without finishing, mark first launch as done anyway
+            // to prevent the wizard from appearing repeatedly
+            if (settingsService.Settings.IsFirstLaunch)
+            {
+                settingsService.Settings.IsFirstLaunch = false;
+                settingsService.Save();
+            }
+        }
+
         // Initialize system tray icon
         _notifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
 
