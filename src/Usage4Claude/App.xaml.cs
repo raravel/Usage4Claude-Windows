@@ -72,6 +72,12 @@ public partial class App : Application
         // Initialize notification service (subscribes to refresh events)
         var notificationService = Services.GetRequiredService<NotificationService>();
 
+        // Build dynamic account submenu and subscribe to changes
+        var accountManager = Services.GetRequiredService<AccountManager>();
+        accountManager.AccountListChanged += (_, _) => Dispatcher.BeginInvoke(RebuildAccountMenu);
+        accountManager.CurrentAccountChanged += (_, _) => Dispatcher.BeginInvoke(RebuildAccountMenu);
+        RebuildAccountMenu();
+
         // Wire up left-click on tray icon to show the popup window
         _notifyIcon.TrayLeftMouseDown += (_, _) => ShowPopupWindow();
     }
@@ -165,6 +171,90 @@ public partial class App : Application
         _settingsWindow.Closed += (_, _) => _settingsWindow = null;
         _settingsWindow.Show();
         _settingsWindow.NavigateToTab(tabIndex);
+    }
+
+    private void RebuildAccountMenu()
+    {
+        if (_notifyIcon?.ContextMenu is not ContextMenu contextMenu) return;
+
+        var accountManager = Services.GetRequiredService<AccountManager>();
+
+        // Remove existing account items
+        var toRemove = contextMenu.Items.OfType<MenuItem>()
+            .Where(m => m.Tag is string t && t.StartsWith("Account_"))
+            .ToList();
+        foreach (var item in toRemove)
+            contextMenu.Items.Remove(item);
+
+        // Also remove old separator if exists
+        var oldSep = contextMenu.Items.OfType<Separator>()
+            .FirstOrDefault(s => s.Tag is string t && t == "AccountSeparator");
+        if (oldSep != null)
+            contextMenu.Items.Remove(oldSep);
+
+        if (!accountManager.HasAccounts || accountManager.Accounts.Count <= 1)
+            return;
+
+        // Find insertion point (before the Settings item)
+        int settingsIndex = -1;
+        for (int i = 0; i < contextMenu.Items.Count; i++)
+        {
+            if (contextMenu.Items[i] is MenuItem mi && mi.Tag is string tag && tag == "Settings")
+            {
+                settingsIndex = i;
+                break;
+            }
+        }
+        if (settingsIndex < 0) return;
+
+        // Insert account items before Settings
+        int insertAt = settingsIndex;
+        foreach (var account in accountManager.Accounts)
+        {
+            var isCurrent = account.Id == accountManager.CurrentAccount?.Id;
+            var menuItem = new MenuItem
+            {
+                Header = account.DisplayName,
+                Tag = $"Account_{account.Id}",
+                // Use a visual indicator instead of IsCheckable to avoid auto-toggle before Click handler
+                Icon = isCurrent
+                    ? new System.Windows.Shapes.Ellipse
+                    {
+                        Width = 8,
+                        Height = 8,
+                        Fill = System.Windows.Media.Brushes.Green
+                    }
+                    : null,
+                FontWeight = isCurrent ? FontWeights.Bold : FontWeights.Normal
+            };
+            var accountId = account.Id; // Capture for closure
+            menuItem.Click += (_, _) => SwitchAccount(accountId);
+            contextMenu.Items.Insert(insertAt, menuItem);
+            insertAt++;
+        }
+
+        // Insert separator after account items
+        var sep = new Separator { Tag = "AccountSeparator" };
+        contextMenu.Items.Insert(insertAt, sep);
+    }
+
+    private void SwitchAccount(Guid accountId)
+    {
+        var accountManager = Services.GetRequiredService<AccountManager>();
+        if (accountManager.SwitchAccount(accountId))
+        {
+            // Reset and restart data refresh for the new account
+            var refreshService = Services.GetRequiredService<DataRefreshService>();
+            refreshService.Reset();
+            refreshService.Start();
+
+            // Update icon
+            var iconManager = Services.GetRequiredService<IconManager>();
+            iconManager.RefreshIcon();
+
+            // Note: MainViewModel.UpdateAccountInfo() and RebuildAccountMenu() are
+            // triggered automatically via CurrentAccountChanged event subscription.
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

@@ -41,6 +41,16 @@ public class AccountManager
     /// </summary>
     public bool HasAccounts => _accounts.Count > 0;
 
+    /// <summary>
+    /// Fired when the current account changes (switch, add first, or remove current).
+    /// </summary>
+    public event EventHandler<Account?>? CurrentAccountChanged;
+
+    /// <summary>
+    /// Fired when accounts are added or removed (for UI elements like tray menu that need rebuilding).
+    /// </summary>
+    public event EventHandler? AccountListChanged;
+
     public AccountManager(CredentialService credentialService, SettingsService settingsService)
     {
         _credentialService = credentialService;
@@ -90,9 +100,15 @@ public class AccountManager
         {
             _settingsService.Settings.CurrentAccountId = _accounts[0].Id.ToString();
             _settingsService.Save();
+            CurrentAccountChanged?.Invoke(this, _accounts[0]);
         }
 
-        return _credentialService.SaveAccounts(_accounts);
+        var saved = _credentialService.SaveAccounts(_accounts);
+        if (saved)
+        {
+            AccountListChanged?.Invoke(this, EventArgs.Empty);
+        }
+        return saved;
     }
 
     /// <summary>
@@ -108,9 +124,15 @@ public class AccountManager
         {
             _settingsService.Settings.CurrentAccountId = _accounts.FirstOrDefault()?.Id.ToString();
             _settingsService.Save();
+            CurrentAccountChanged?.Invoke(this, CurrentAccount);
         }
 
-        return _credentialService.SaveAccounts(_accounts);
+        var saved = _credentialService.SaveAccounts(_accounts);
+        if (saved)
+        {
+            AccountListChanged?.Invoke(this, EventArgs.Empty);
+        }
+        return saved;
     }
 
     /// <summary>
@@ -122,6 +144,7 @@ public class AccountManager
 
         _settingsService.Settings.CurrentAccountId = accountId.ToString();
         _settingsService.Save();
+        CurrentAccountChanged?.Invoke(this, CurrentAccount);
         return true;
     }
 
