@@ -2,7 +2,12 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+    <!-- REVIEW: TargetFramework을 net8.0-windows10.0.19041.0으로 올려야 합니다.
+         SkiaSharp.Views.WPF 3.119.2는 net8.0-windows10.0.19041 타겟만 제공하므로,
+         17763(Win10 1809)에서는 net462 fallback이 발생하여 NU1701 경고와 함께
+         구형 OpenTK 3.x 의존성이 끌려옵니다. 19041(Win10 2004)로 올리면
+         SkiaSharp.Views.WPF, OpenTK, OpenTK.GLWpfControl의 NU1701 경고가 모두 해결됩니다. -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -11,7 +16,10 @@
 
   <ItemGroup>
     <!-- System Tray -->
-    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
+    <!-- REVIEW: H.NotifyIcon.Wpf 2.4.1은 net10.0-windows7.0과 net462만 제공하여
+         .NET 8에서 NU1701 경고가 발생합니다. 2.3.2 버전은 net8.0-windows7.0 타겟을
+         포함하므로 .NET 8과 완벽 호환됩니다. 2.4.1 -> 2.3.2로 다운그레이드 권장. -->
+    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.3.2" />
 
     <!-- Browser Login -->
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3800.47" />
