@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <!-- Reusable card border style -->
         <Style x:Key="CardBorder" TargetType="Border">
             <Setter Property="Background" Value="#08000000" />
@@ -132,6 +133,39 @@
                         <Run Text="&#x1F4D6; " /><Run Text="Claude Usage Page" Foreground="#0066CC" TextDecorations="Underline" />
                     </TextBlock>
                 </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- Updates Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Updates" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Content="Check for Updates"
+                            Command="{Binding CheckForUpdateCommand}"
+                            Padding="12,5"
+                            FontSize="12"
+                            Cursor="Hand"
+                            Margin="0,0,8,0" />
+                    <TextBlock Text="Checking..."
+                               FontSize="12" Foreground="#888888"
+                               VerticalAlignment="Center"
+                               Visibility="{Binding IsCheckingForUpdate, Converter={StaticResource BoolToVis}}" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding UpdateStatusText}"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,8" />
+
+                <Button Content="Download Update"
+                        Command="{Binding OpenUpdateUrlCommand}"
+                        Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVis}}"
+                        Padding="12,5"
+                        FontSize="12"
+                        Cursor="Hand"
+                        HorizontalAlignment="Left" />
             </StackPanel>
         </Border>
 

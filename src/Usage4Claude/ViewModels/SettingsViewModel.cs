@@ -48,6 +48,10 @@ public class SettingsViewModel : ViewModelBase
         SaveAccountChangesCommand = new RelayCommand(ExecuteSaveAccountChanges, CanExecuteSaveAccountChanges);
         TestNotificationCommand = new RelayCommand(ExecuteTestNotification);
 
+        // Update check commands
+        CheckForUpdateCommand = new AsyncRelayCommand(ExecuteCheckForUpdate);
+        OpenUpdateUrlCommand = new RelayCommand(ExecuteOpenUpdateUrl);
+
         // Load initial accounts
         RefreshAccountsList();
     }
@@ -644,6 +648,93 @@ public class SettingsViewModel : ViewModelBase
     private void Save()
     {
         _settingsService.Save();
+    }
+
+    // =====================================================
+    // About tab: Update check
+    // =====================================================
+
+    private string _updateStatusText = string.Empty;
+    public string UpdateStatusText
+    {
+        get => _updateStatusText;
+        private set => SetProperty(ref _updateStatusText, value);
+    }
+
+    private bool _isUpdateAvailable;
+    public bool IsUpdateAvailable
+    {
+        get => _isUpdateAvailable;
+        private set => SetProperty(ref _isUpdateAvailable, value);
+    }
+
+    private string _updateUrl = string.Empty;
+    public string UpdateUrl
+    {
+        get => _updateUrl;
+        private set => SetProperty(ref _updateUrl, value);
+    }
+
+    private bool _isCheckingForUpdate;
+    public bool IsCheckingForUpdate
+    {
+        get => _isCheckingForUpdate;
+        private set => SetProperty(ref _isCheckingForUpdate, value);
+    }
+
+    public ICommand CheckForUpdateCommand { get; }
+    public ICommand OpenUpdateUrlCommand { get; }
+
+    private async Task ExecuteCheckForUpdate()
+    {
+        IsCheckingForUpdate = true;
+        UpdateStatusText = "Checking for updates...";
+
+        try
+        {
+            var updateService = App.Current.Services.GetRequiredService<UpdateCheckService>();
+            var result = await updateService.CheckForUpdateAsync(forceCheck: true);
+
+            if (!string.IsNullOrEmpty(result.ErrorMessage))
+            {
+                UpdateStatusText = $"Check failed: {result.ErrorMessage}";
+                IsUpdateAvailable = false;
+            }
+            else if (result.IsUpToDate)
+            {
+                UpdateStatusText = $"You're up to date! (v{result.CurrentVersion})";
+                IsUpdateAvailable = false;
+            }
+            else
+            {
+                UpdateStatusText = $"Update available: v{result.LatestVersion}";
+                UpdateUrl = result.ReleaseUrl ?? "";
+                IsUpdateAvailable = true;
+            }
+        }
+        finally
+        {
+            IsCheckingForUpdate = false;
+        }
+    }
+
+    private void ExecuteOpenUpdateUrl()
+    {
+        if (string.IsNullOrEmpty(UpdateUrl)) return;
+
+        // Validate URL is a legitimate HTTPS GitHub URL to prevent injection
+        if (!Uri.TryCreate(UpdateUrl, UriKind.Absolute, out var uri) ||
+            uri.Scheme != "https" ||
+            !uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = UpdateUrl,
+            UseShellExecute = true
+        });
     }
 }
 
