@@ -5,7 +5,6 @@ using Usage4Claude.Models;
 
 namespace Usage4Claude.Services;
 
-// TODO: Extract ISettingsService interface and add thread safety when DI container is introduced (task 01-04+)
 public class SettingsService
 {
     private static readonly string AppDataPath = Path.Combine(
@@ -41,9 +40,8 @@ public class SettingsService
             else
             {
                 _settings = new UserSettings();
-                // 시스템 언어 감지
                 _settings.Language = DetectSystemLanguage();
-                Save(); // 기본값으로 첫 저장
+                Save();
             }
         }
         catch (IOException ex)
