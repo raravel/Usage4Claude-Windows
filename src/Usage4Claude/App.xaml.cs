@@ -2,6 +2,8 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using H.NotifyIcon;
+using Microsoft.Extensions.DependencyInjection;
+using Usage4Claude.Services;
 
 namespace Usage4Claude;
 
@@ -10,6 +12,16 @@ namespace Usage4Claude;
 /// </summary>
 public partial class App : Application
 {
+    /// <summary>
+    /// Typed accessor for the current Application instance.
+    /// </summary>
+    public new static App Current => (App)Application.Current;
+
+    /// <summary>
+    /// The application-wide DI service provider.
+    /// </summary>
+    public IServiceProvider Services { get; private set; } = null!;
+
     private static Mutex? _mutex;
     private TaskbarIcon? _notifyIcon;
 
@@ -31,11 +43,42 @@ public partial class App : Application
 
         base.OnStartup(e);
 
+        // Configure DI container
+        Services = ConfigureServices();
+
         // Initialize system tray icon
         _notifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
 
-        // Wire up the exit menu item via Tag matching
-        if (_notifyIcon.ContextMenu is ContextMenu contextMenu)
+        // Wire up the exit menu item via code-behind
+        WireUpContextMenu();
+
+        _notifyIcon.ForceCreate(enablesEfficiencyMode: false);
+    }
+
+    private static IServiceProvider ConfigureServices()
+    {
+        var services = new ServiceCollection();
+
+        // Services (Singleton)
+        services.AddSingleton<SettingsService>();
+        // Future services to be registered as they are implemented:
+        // services.AddSingleton<ClaudeApiService>();
+        // services.AddSingleton<DataRefreshService>();
+        // services.AddSingleton<CredentialService>();
+        // services.AddSingleton<NotificationService>();
+        // services.AddSingleton<LocalizationService>();
+        // services.AddSingleton<UpdateCheckService>();
+
+        // ViewModels (Transient) - to be registered as they are implemented:
+        // services.AddTransient<MainViewModel>();
+        // services.AddTransient<SettingsViewModel>();
+
+        return services.BuildServiceProvider();
+    }
+
+    private void WireUpContextMenu()
+    {
+        if (_notifyIcon?.ContextMenu is ContextMenu contextMenu)
         {
             foreach (var item in contextMenu.Items)
             {
@@ -45,8 +88,6 @@ public partial class App : Application
                 }
             }
         }
-
-        _notifyIcon.ForceCreate(enablesEfficiencyMode: false);
     }
 
     private void ExitApplication_Click(object sender, RoutedEventArgs e)
@@ -57,6 +98,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _notifyIcon?.Dispose();
+        _mutex?.ReleaseMutex();
         _mutex?.Dispose();
         base.OnExit(e);
     }
