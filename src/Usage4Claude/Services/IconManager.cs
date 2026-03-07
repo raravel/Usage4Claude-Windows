@@ -30,6 +30,7 @@ public class IconManager : IDisposable
         _refreshService = refreshService;
 
         _refreshService.UsageDataChanged += OnUsageDataChanged;
+        _refreshService.RefreshingChanged += OnRefreshingChanged;
     }
 
     /// <summary>
@@ -56,6 +57,15 @@ public class IconManager : IDisposable
         Application.Current?.Dispatcher.Invoke(() => UpdateIcon(data));
     }
 
+    private void OnRefreshingChanged(object? sender, bool isRefreshing)
+    {
+        if (!isRefreshing || _taskbarIcon == null) return;
+        Application.Current?.Dispatcher.Invoke(() =>
+        {
+            _taskbarIcon.ToolTipText = "Usage4Claude - Refreshing...";
+        });
+    }
+
     private void UpdateIcon(UsageData? data)
     {
         if (_taskbarIcon == null) return;
@@ -80,7 +90,21 @@ public class IconManager : IDisposable
             (pct, text, ring, mono) => IconRenderer.RenderIcon(pct, text, ring, mono));
 
         ApplyIcon(bitmap);
-        _taskbarIcon.ToolTipText = $"Usage4Claude - {percentage:F0}%";
+        _taskbarIcon.ToolTipText = $"Usage4Claude - {percentage:F0}%{FormatResetTimeForTooltip(data?.FiveHour?.ResetsAt)}";
+    }
+
+    private static string FormatResetTimeForTooltip(DateTime? resetTime)
+    {
+        if (resetTime == null) return string.Empty;
+
+        var remaining = resetTime.Value - DateTime.UtcNow;
+        if (remaining <= TimeSpan.Zero) return string.Empty;
+
+        if (remaining.TotalHours >= 1)
+            return $" ({(int)remaining.TotalHours}h)";
+        if (remaining.TotalMinutes >= 1)
+            return $" ({(int)remaining.TotalMinutes}m)";
+        return " (< 1m)";
     }
 
     /// <summary>
@@ -128,6 +152,7 @@ public class IconManager : IDisposable
         _disposed = true;
 
         _refreshService.UsageDataChanged -= OnUsageDataChanged;
+        _refreshService.RefreshingChanged -= OnRefreshingChanged;
         _iconCache.Clear();
     }
 }

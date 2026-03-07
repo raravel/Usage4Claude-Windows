@@ -86,21 +86,34 @@ public partial class App : Application
 
     private void WireUpContextMenu()
     {
-        if (_notifyIcon?.ContextMenu is ContextMenu contextMenu)
+        if (_notifyIcon?.ContextMenu is not ContextMenu contextMenu) return;
+
+        foreach (var item in contextMenu.Items)
         {
-            foreach (var item in contextMenu.Items)
+            if (item is MenuItem menuItem && menuItem.Tag is string tag)
             {
-                if (item is MenuItem menuItem && menuItem.Tag is string tag && tag == "Exit")
+                switch (tag)
                 {
-                    menuItem.Click += ExitApplication_Click;
+                    case "Exit":
+                        menuItem.Click += (_, _) => Shutdown();
+                        break;
+                    case "Refresh":
+                        menuItem.Click += async (_, _) =>
+                        {
+                            var refreshService = Services.GetService<DataRefreshService>();
+                            if (refreshService != null)
+                                await refreshService.ManualRefreshAsync();
+                        };
+                        break;
+                    case "Settings":
+                        menuItem.Click += (_, _) =>
+                        {
+                            // TODO: Open settings window (Task 06)
+                        };
+                        break;
                 }
             }
         }
-    }
-
-    private void ExitApplication_Click(object sender, RoutedEventArgs e)
-    {
-        Shutdown();
     }
 
     protected override void OnExit(ExitEventArgs e)
