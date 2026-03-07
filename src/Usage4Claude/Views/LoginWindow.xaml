@@ -24,30 +24,39 @@
                 BorderBrush="#CCCCCC"
                 BorderThickness="0,1,0,0"
                 Padding="12,6">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                <!-- Status text -->
-                <TextBlock x:Name="StatusText"
-                           Grid.Column="0"
-                           Text="Loading..."
-                           FontSize="12"
-                           Foreground="#555555"
-                           VerticalAlignment="Center" />
+                    <!-- Status text -->
+                    <TextBlock x:Name="StatusText"
+                               Grid.Column="0"
+                               Text="Loading..."
+                               FontSize="12"
+                               Foreground="#555555"
+                               VerticalAlignment="Center" />
 
-                <!-- Cancel button -->
-                <Button x:Name="CancelButton"
-                        Grid.Column="1"
-                        Content="Cancel"
-                        Padding="16,4"
-                        FontSize="12"
-                        Cursor="Hand"
-                        Click="CancelButton_Click"
-                        IsCancel="True" />
-            </Grid>
+                    <!-- Cancel button -->
+                    <Button x:Name="CancelButton"
+                            Grid.Column="1"
+                            Content="Cancel"
+                            Padding="16,4"
+                            FontSize="12"
+                            Cursor="Hand"
+                            Click="CancelButton_Click"
+                            IsCancel="True" />
+                </Grid>
+
+                <!-- Progress indicator during login -->
+                <ProgressBar x:Name="StatusProgress"
+                             IsIndeterminate="True"
+                             Height="2"
+                             Margin="0,4,0,0"
+                             Visibility="Collapsed" />
+            </StackPanel>
         </Border>
     </Grid>
 </Window>

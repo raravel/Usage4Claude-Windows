@@ -1,8 +1,8 @@
 <Window x:Class="Usage4Claude.Views.OrgSelectionDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Select Organization"
-        Width="400" Height="300"
+        Title="Select Organizations"
+        Width="420" Height="350"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
@@ -10,44 +10,63 @@
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />  <!-- Header text -->
+            <RowDefinition Height="Auto" />  <!-- Select All -->
             <RowDefinition Height="*" />     <!-- ListBox -->
             <RowDefinition Height="Auto" />  <!-- Buttons -->
         </Grid.RowDefinitions>
 
         <!-- Header -->
         <TextBlock Grid.Row="0"
-                   Text="Multiple organizations found. Please select one:"
+                   Text="Select the organizations you want to add:"
                    FontSize="13"
                    TextWrapping="Wrap"
-                   Margin="0,0,0,12" />
+                   Margin="0,0,0,8" />
 
-        <!-- Organization list -->
+        <!-- Select All checkbox -->
+        <CheckBox x:Name="SelectAllCheckBox"
+                  Grid.Row="1"
+                  Content="Select All"
+                  FontSize="12"
+                  Margin="4,0,0,8"
+                  Checked="SelectAllCheckBox_Changed"
+                  Unchecked="SelectAllCheckBox_Changed" />
+
+        <!-- Organization list with checkboxes -->
         <ListBox x:Name="OrgListBox"
-                 Grid.Row="1"
-                 SelectionChanged="OrgListBox_SelectionChanged"
+                 Grid.Row="2"
                  BorderBrush="#CCCCCC"
                  BorderThickness="1"
-                 Margin="0,0,0,12">
+                 Margin="0,0,0,12"
+                 SelectionMode="Multiple">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Margin="4,3">
-                        <TextBlock Text="{Binding Name}"
-                                   FontSize="13"
-                                   FontWeight="Medium" />
-                        <TextBlock FontSize="10"
-                                   Foreground="#888888">
-                            <TextBlock.Text>
-                                <Binding Path="Uuid"
-                                         StringFormat="ID: {0}" />
-                            </TextBlock.Text>
-                        </TextBlock>
-                    </StackPanel>
+                    <CheckBox IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                              Margin="4,3">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}"
+                                       FontSize="13"
+                                       FontWeight="Medium" />
+                            <TextBlock FontSize="10"
+                                       Foreground="#888888">
+                                <TextBlock.Text>
+                                    <Binding Path="Uuid"
+                                             StringFormat="ID: {0}" />
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
+                    </CheckBox>
                 </DataTemplate>
             </ListBox.ItemTemplate>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <EventSetter Event="Selected" Handler="OrgListBoxItem_SelectionChanged" />
+                    <EventSetter Event="Unselected" Handler="OrgListBoxItem_SelectionChanged" />
+                </Style>
+            </ListBox.ItemContainerStyle>
         </ListBox>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="2"
+        <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
             <Button x:Name="OkButton"
