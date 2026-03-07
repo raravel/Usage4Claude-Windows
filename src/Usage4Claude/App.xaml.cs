@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using H.NotifyIcon;
 using Microsoft.Extensions.DependencyInjection;
 using Usage4Claude.Services;
+using Usage4Claude.ViewModels;
 
 namespace Usage4Claude;
 
@@ -64,14 +65,15 @@ public partial class App : Application
         services.AddSingleton<ClaudeApiService>();
         services.AddSingleton<CredentialService>();
         services.AddSingleton<AccountManager>();
+        services.AddSingleton<SmartMonitorService>();
+        services.AddSingleton<DataRefreshService>();
         // Future services to be registered as they are implemented:
-        // services.AddSingleton<DataRefreshService>();
         // services.AddSingleton<NotificationService>();
         // services.AddSingleton<LocalizationService>();
         // services.AddSingleton<UpdateCheckService>();
 
-        // ViewModels (Transient) - to be registered as they are implemented:
-        // services.AddTransient<MainViewModel>();
+        // ViewModels (Singleton - subscribes to service events)
+        services.AddSingleton<MainViewModel>();
         // services.AddTransient<SettingsViewModel>();
 
         return services.BuildServiceProvider();
@@ -98,6 +100,9 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // Stop background services
+        Services.GetService<DataRefreshService>()?.Stop();
+
         _notifyIcon?.Dispose();
         _mutex?.ReleaseMutex();
         _mutex?.Dispose();
