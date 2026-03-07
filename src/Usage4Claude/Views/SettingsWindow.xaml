@@ -97,9 +97,7 @@
             <ScrollViewer x:Name="AboutContent"
                           VerticalScrollBarVisibility="Auto"
                           Visibility="{Binding IsChecked, ElementName=AboutTab, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="About info will go here (Task 06-03)"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Foreground="Gray" />
+                <tabs:AboutTab />
             </ScrollViewer>
         </Grid>
     </Grid>

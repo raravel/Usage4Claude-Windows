@@ -13,17 +13,30 @@ public class SettingsViewModel : ViewModelBase
     private readonly IconManager _iconManager;
     private readonly AccountManager _accountManager;
     private readonly ClaudeApiService _claudeApiService;
+    private readonly AutoStartService _autoStartService;
 
     public SettingsViewModel(
         SettingsService settingsService,
         IconManager iconManager,
         AccountManager accountManager,
-        ClaudeApiService claudeApiService)
+        ClaudeApiService claudeApiService,
+        AutoStartService autoStartService)
     {
         _settingsService = settingsService;
         _iconManager = iconManager;
         _accountManager = accountManager;
         _claudeApiService = claudeApiService;
+        _autoStartService = autoStartService;
+
+        // Sync the persisted setting with actual registry state on init
+        try
+        {
+            _settingsService.Settings.LaunchAtLogin = _autoStartService.IsAutoStartEnabled();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[Settings] Failed to read auto-start state: {ex.Message}");
+        }
 
         // Initialize commands
         AddAccountCommand = new RelayCommand(ExecuteAddAccount, CanExecuteAddAccount);
@@ -228,6 +241,19 @@ public class SettingsViewModel : ViewModelBase
                 _settingsService.Settings.LaunchAtLogin = value;
                 OnPropertyChanged();
                 Save();
+
+                // Actually toggle the Windows Registry auto-start entry
+                try
+                {
+                    if (value)
+                        _autoStartService.EnableAutoStart();
+                    else
+                        _autoStartService.DisableAutoStart();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[Settings] Auto-start toggle failed: {ex.Message}");
+                }
             }
         }
     }

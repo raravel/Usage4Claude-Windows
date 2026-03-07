@@ -104,6 +104,7 @@ public partial class App : Application
         services.AddSingleton<SmartMonitorService>();
         services.AddSingleton<DataRefreshService>();
         services.AddSingleton<IconManager>();
+        services.AddSingleton<AutoStartService>();
         // Future services to be registered as they are implemented:
         // services.AddSingleton<NotificationService>();
         // services.AddSingleton<LocalizationService>();
