@@ -68,7 +68,8 @@ public enum AppAppearance
     Dark
 }
 
-// TODO: Add locale-compatible serialization values (en, ja, zh-Hans, zh-Hant, ko) in task 08-00 (i18n)
+// Locale mapping: English=en, Japanese=ja, Chinese=zh-Hans, ChineseTraditional=zh-Hant, Korean=ko
+// Language switching is handled by LocalizationService (task 08-00)
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AppLanguage
 {
