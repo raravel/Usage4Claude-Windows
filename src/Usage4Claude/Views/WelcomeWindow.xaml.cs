@@ -16,8 +16,15 @@ public partial class WelcomeWindow : Window
     private int _currentStep = 1;
     private bool _accountAdded;
 
-    private static readonly SolidColorBrush ActiveDotBrush = new(Color.FromRgb(0x00, 0x78, 0xD4));
-    private static readonly SolidColorBrush InactiveDotBrush = new(Color.FromRgb(0xCC, 0xCC, 0xCC));
+    private static readonly SolidColorBrush ActiveDotBrush = CreateFrozenBrush(0x00, 0x78, 0xD4);
+    private static readonly SolidColorBrush InactiveDotBrush = CreateFrozenBrush(0xCC, 0xCC, 0xCC);
+
+    private static SolidColorBrush CreateFrozenBrush(byte r, byte g, byte b)
+    {
+        var brush = new SolidColorBrush(Color.FromRgb(r, g, b));
+        brush.Freeze();
+        return brush;
+    }
 
     public WelcomeWindow()
     {
@@ -63,8 +70,15 @@ public partial class WelcomeWindow : Window
             return;
         }
 
+        if (!Guid.TryParse(orgId, out _))
+        {
+            MessageBox.Show("Organization ID must be a valid UUID format.",
+                "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         var accountManager = App.Current.Services.GetRequiredService<AccountManager>();
-        var added = accountManager.AddAccount(sessionKey, orgId, "Default");
+        var added = accountManager.AddAccount(sessionKey, orgId, orgId);
 
         if (added)
         {
@@ -73,7 +87,7 @@ public partial class WelcomeWindow : Window
         }
         else
         {
-            MessageBox.Show("Failed to add account. Please check your credentials and try again.",
+            MessageBox.Show("Failed to save account. Please try again.",
                 "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -100,9 +114,10 @@ public partial class WelcomeWindow : Window
                 var autoStart = App.Current.Services.GetRequiredService<AutoStartService>();
                 autoStart.EnableAutoStart();
             }
-            catch
+            catch (Exception ex)
             {
                 // Non-critical: auto-start registration failure should not block wizard completion
+                System.Diagnostics.Debug.WriteLine($"[WelcomeWindow] Auto-start failed: {ex.Message}");
             }
         }
 
