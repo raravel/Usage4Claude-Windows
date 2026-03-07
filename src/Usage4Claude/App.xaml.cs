@@ -1,6 +1,7 @@
-﻿using System.Configuration;
-using System.Data;
+using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
+using H.NotifyIcon;
 
 namespace Usage4Claude;
 
@@ -9,5 +10,54 @@ namespace Usage4Claude;
 /// </summary>
 public partial class App : Application
 {
-}
+    private static Mutex? _mutex;
+    private TaskbarIcon? _notifyIcon;
 
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        // Single instance check
+        const string mutexName = "Usage4Claude-Windows-SingleInstance";
+        _mutex = new Mutex(true, mutexName, out bool isNewInstance);
+
+        if (!isNewInstance)
+        {
+            _mutex.Dispose();
+            _mutex = null;
+            MessageBox.Show("Usage4Claude is already running.", "Usage4Claude",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            Shutdown();
+            return;
+        }
+
+        base.OnStartup(e);
+
+        // Initialize system tray icon
+        _notifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
+
+        // Wire up the exit menu item via Tag matching
+        if (_notifyIcon.ContextMenu is ContextMenu contextMenu)
+        {
+            foreach (var item in contextMenu.Items)
+            {
+                if (item is MenuItem menuItem && menuItem.Tag is string tag && tag == "Exit")
+                {
+                    menuItem.Click += ExitApplication_Click;
+                }
+            }
+        }
+
+        _notifyIcon.ForceCreate(enablesEfficiencyMode: false);
+    }
+
+    private void ExitApplication_Click(object sender, RoutedEventArgs e)
+    {
+        Shutdown();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _notifyIcon?.Dispose();
+        _mutex?.Dispose();
+        base.OnExit(e);
+    }
+}
