@@ -1,6 +1,7 @@
 # Build results
 bin/
 obj/
+publish/
 .vs/
 
 # User-specific files
@@ -16,6 +17,7 @@ packages/
 # IDE
 .idea/
 *.DotSettings.user
+*.swp
 
 # OS
 Thumbs.db
