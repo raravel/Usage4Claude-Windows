@@ -27,6 +27,7 @@ public partial class App : Application
     private static Mutex? _mutex;
     private TaskbarIcon? _notifyIcon;
     private PopupWindow? _activePopup;
+    private SettingsWindow? _settingsWindow;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -103,6 +104,7 @@ public partial class App : Application
         services.AddSingleton<SmartMonitorService>();
         services.AddSingleton<DataRefreshService>();
         services.AddSingleton<IconManager>();
+        services.AddSingleton<AutoStartService>();
         // Future services to be registered as they are implemented:
         // services.AddSingleton<NotificationService>();
         // services.AddSingleton<LocalizationService>();
@@ -110,7 +112,7 @@ public partial class App : Application
 
         // ViewModels (Singleton - subscribes to service events)
         services.AddSingleton<MainViewModel>();
-        // services.AddTransient<SettingsViewModel>();
+        services.AddSingleton<SettingsViewModel>();
 
         return services.BuildServiceProvider();
     }
@@ -137,14 +139,27 @@ public partial class App : Application
                         };
                         break;
                     case "Settings":
-                        menuItem.Click += (_, _) =>
-                        {
-                            // TODO: Open settings window (Task 06)
-                        };
+                        menuItem.Click += (_, _) => ShowSettingsWindow();
                         break;
                 }
             }
         }
+    }
+
+    private void ShowSettingsWindow(int tabIndex = 0)
+    {
+        if (_settingsWindow is { IsLoaded: true })
+        {
+            _settingsWindow.NavigateToTab(tabIndex);
+            _settingsWindow.Activate();
+            return;
+        }
+
+        var viewModel = Services.GetRequiredService<SettingsViewModel>();
+        _settingsWindow = new SettingsWindow { DataContext = viewModel };
+        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.Show();
+        _settingsWindow.NavigateToTab(tabIndex);
     }
 
     protected override void OnExit(ExitEventArgs e)

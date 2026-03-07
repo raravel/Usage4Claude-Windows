@@ -38,6 +38,8 @@ public class AsyncRelayCommand : ICommand
 
     public bool CanExecute(object? parameter) => !_isExecuting && (_canExecute?.Invoke() ?? true);
 
+    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+
     public async void Execute(object? parameter)
     {
         if (_isExecuting) return;
