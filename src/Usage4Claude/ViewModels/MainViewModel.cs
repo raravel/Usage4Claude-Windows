@@ -70,9 +70,16 @@ public class MainViewModel : ViewModelBase
     }
 
     // Computed display values that switch between reset time and countdown
-    public string FiveHourDisplayValue => ShowRemainingMode
-        ? $"{FiveHourPercentage:F0}% - {FiveHourCountdown}"
-        : $"{FiveHourPercentage:F0}% - {FiveHourResetTime}";
+    public string FiveHourDisplayValue
+    {
+        get
+        {
+            var suffix = ShowRemainingMode ? FiveHourCountdown : FiveHourResetTime;
+            return string.IsNullOrEmpty(suffix)
+                ? $"{FiveHourPercentage:F0}%"
+                : $"{FiveHourPercentage:F0}% - {suffix}";
+        }
+    }
 
     public string SevenDayDisplayValue => SevenDayPercentage.HasValue
         ? (ShowRemainingMode
@@ -209,10 +216,23 @@ public class MainViewModel : ViewModelBase
             ExtraUsagePercentage = data.ExtraUsage?.Percentage;
             ExtraUsageText = FormatExtraUsage(data.ExtraUsage);
 
-            // Update countdown values immediately if timer is running
+            // Update countdown and display values
             if (_countdownTimer != null)
             {
                 UpdateCountdownValues();
+            }
+            else
+            {
+                // Timer not running - still notify display value changes for XAML bindings
+                NotifyDisplayValueProperties();
+
+                // Restart timer if new future reset timestamps arrived
+                var hasFutureReset = (_fiveHourResetsAt.HasValue && _fiveHourResetsAt.Value > DateTime.UtcNow)
+                                  || (_sevenDayResetsAt.HasValue && _sevenDayResetsAt.Value > DateTime.UtcNow);
+                if (hasFutureReset)
+                {
+                    StartCountdownTimer();
+                }
             }
 
             // Status
