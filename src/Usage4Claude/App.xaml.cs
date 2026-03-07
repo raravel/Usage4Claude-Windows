@@ -54,6 +54,10 @@ public partial class App : Application
         WireUpContextMenu();
 
         _notifyIcon.ForceCreate(enablesEfficiencyMode: false);
+
+        // Initialize the icon manager to handle dynamic tray icon updates
+        var iconManager = Services.GetRequiredService<IconManager>();
+        iconManager.Initialize(_notifyIcon);
     }
 
     private static IServiceProvider ConfigureServices()
@@ -67,6 +71,7 @@ public partial class App : Application
         services.AddSingleton<AccountManager>();
         services.AddSingleton<SmartMonitorService>();
         services.AddSingleton<DataRefreshService>();
+        services.AddSingleton<IconManager>();
         // Future services to be registered as they are implemented:
         // services.AddSingleton<NotificationService>();
         // services.AddSingleton<LocalizationService>();
@@ -81,27 +86,41 @@ public partial class App : Application
 
     private void WireUpContextMenu()
     {
-        if (_notifyIcon?.ContextMenu is ContextMenu contextMenu)
+        if (_notifyIcon?.ContextMenu is not ContextMenu contextMenu) return;
+
+        foreach (var item in contextMenu.Items)
         {
-            foreach (var item in contextMenu.Items)
+            if (item is MenuItem menuItem && menuItem.Tag is string tag)
             {
-                if (item is MenuItem menuItem && menuItem.Tag is string tag && tag == "Exit")
+                switch (tag)
                 {
-                    menuItem.Click += ExitApplication_Click;
+                    case "Exit":
+                        menuItem.Click += (_, _) => Shutdown();
+                        break;
+                    case "Refresh":
+                        menuItem.Click += async (_, _) =>
+                        {
+                            var refreshService = Services.GetService<DataRefreshService>();
+                            if (refreshService != null)
+                                await refreshService.ManualRefreshAsync();
+                        };
+                        break;
+                    case "Settings":
+                        menuItem.Click += (_, _) =>
+                        {
+                            // TODO: Open settings window (Task 06)
+                        };
+                        break;
                 }
             }
         }
-    }
-
-    private void ExitApplication_Click(object sender, RoutedEventArgs e)
-    {
-        Shutdown();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         // Stop background services
         Services.GetService<DataRefreshService>()?.Stop();
+        Services.GetService<IconManager>()?.Dispose();
 
         _notifyIcon?.Dispose();
         _mutex?.ReleaseMutex();
