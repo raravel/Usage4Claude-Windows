@@ -17,6 +17,7 @@ public partial class PopupWindow : Window
     {
         InitializeComponent();
         Loaded += OnLoaded;
+        Closed += OnClosed;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -34,7 +35,7 @@ public partial class PopupWindow : Window
     {
         if (e.PropertyName == nameof(ViewModels.MainViewModel.IsRefreshing) && sender is ViewModels.MainViewModel vm)
         {
-            Dispatcher.Invoke(() => UpdateSpinAnimation(vm.IsRefreshing));
+            Dispatcher.BeginInvoke(() => UpdateSpinAnimation(vm.IsRefreshing));
         }
     }
 
@@ -108,8 +109,9 @@ public partial class PopupWindow : Window
         Top = workArea.Bottom - ActualHeight - 8;
     }
 
-    private void CleanupAndClose()
+    private void OnClosed(object? sender, EventArgs e)
     {
+        // Ensure cleanup always happens regardless of how the window was closed
         if (DataContext is ViewModels.MainViewModel vm)
         {
             vm.PropertyChanged -= OnViewModelPropertyChanged;
@@ -117,6 +119,10 @@ public partial class PopupWindow : Window
         }
 
         _spinStoryboard?.Stop(this);
+    }
+
+    private void CleanupAndClose()
+    {
         Close();
     }
 }

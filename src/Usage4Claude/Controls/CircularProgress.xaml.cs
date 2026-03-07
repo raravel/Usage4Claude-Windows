@@ -18,10 +18,23 @@ public partial class CircularProgress : UserControl, INotifyPropertyChanged
     #region Color Constants
 
     // Color thresholds matching IconRenderer.cs
-    private static readonly Color GreenColor = (Color)ColorConverter.ConvertFromString("#4CAF50");
-    private static readonly Color AmberColor = (Color)ColorConverter.ConvertFromString("#FFA726");
-    private static readonly Color OrangeColor = (Color)ColorConverter.ConvertFromString("#FF7043");
-    private static readonly Color RedColor = (Color)ColorConverter.ConvertFromString("#EF5350");
+    private static readonly Color GreenColor = Color.FromRgb(0x4C, 0xAF, 0x50);
+    private static readonly Color AmberColor = Color.FromRgb(0xFF, 0xA7, 0x26);
+    private static readonly Color OrangeColor = Color.FromRgb(0xFF, 0x70, 0x43);
+    private static readonly Color RedColor = Color.FromRgb(0xEF, 0x53, 0x50);
+
+    #endregion
+
+    #region Default Brushes
+
+    private static readonly SolidColorBrush DefaultTrackBrush = CreateFrozenBrush(Color.FromArgb(51, 128, 128, 128));
+
+    private static SolidColorBrush CreateFrozenBrush(Color color)
+    {
+        var brush = new SolidColorBrush(color);
+        brush.Freeze();
+        return brush;
+    }
 
     #endregion
 
@@ -43,7 +56,7 @@ public partial class CircularProgress : UserControl, INotifyPropertyChanged
         nameof(TrackColor),
         typeof(Brush),
         typeof(CircularProgress),
-        new PropertyMetadata(new SolidColorBrush(Color.FromArgb(51, 128, 128, 128))));
+        new PropertyMetadata(DefaultTrackBrush));
 
     /// <summary>
     /// The brush used for the foreground progress arc.
@@ -160,6 +173,8 @@ public partial class CircularProgress : UserControl, INotifyPropertyChanged
     private Geometry _trackGeometry = Geometry.Empty;
     private Geometry _arcGeometry = Geometry.Empty;
     private bool _isProgressColorExplicit;
+    private SolidColorBrush? _cachedProgressBrush;
+    private Color _cachedProgressColor;
 
     /// <summary>
     /// The geometry for the full background track circle.
@@ -204,7 +219,14 @@ public partial class CircularProgress : UserControl, INotifyPropertyChanged
             if (_isProgressColorExplicit && ProgressColor != null)
                 return ProgressColor;
 
-            return new SolidColorBrush(GetColorForPercentage(Value));
+            var color = GetColorForPercentage(Value);
+            if (_cachedProgressBrush == null || _cachedProgressColor != color)
+            {
+                _cachedProgressColor = color;
+                _cachedProgressBrush = CreateFrozenBrush(color);
+            }
+
+            return _cachedProgressBrush;
         }
     }
 
