@@ -5,6 +5,7 @@ using H.NotifyIcon;
 using Microsoft.Extensions.DependencyInjection;
 using Usage4Claude.Services;
 using Usage4Claude.ViewModels;
+using Usage4Claude.Views;
 
 namespace Usage4Claude;
 
@@ -25,6 +26,7 @@ public partial class App : Application
 
     private static Mutex? _mutex;
     private TaskbarIcon? _notifyIcon;
+    private PopupWindow? _activePopup;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -58,6 +60,35 @@ public partial class App : Application
         // Initialize the icon manager to handle dynamic tray icon updates
         var iconManager = Services.GetRequiredService<IconManager>();
         iconManager.Initialize(_notifyIcon);
+
+        // Start periodic data refresh
+        var refreshService = Services.GetRequiredService<DataRefreshService>();
+        refreshService.Start();
+
+        // Wire up left-click on tray icon to show the popup window
+        _notifyIcon.TrayLeftMouseDown += (_, _) => ShowPopupWindow();
+    }
+
+    private void ShowPopupWindow()
+    {
+        // Close existing popup if open (toggle behavior)
+        if (_activePopup is { IsLoaded: true })
+        {
+            _activePopup.Close();
+            _activePopup = null;
+            return;
+        }
+
+        var viewModel = Services.GetRequiredService<MainViewModel>();
+
+        // Trigger a smart refresh (throttled to 30s minimum)
+        var refreshService = Services.GetRequiredService<DataRefreshService>();
+        _ = refreshService.RefreshOnPopoverOpenAsync();
+
+        _activePopup = new PopupWindow { DataContext = viewModel };
+        _activePopup.Show();
+        _activePopup.PositionNearTray();
+        _activePopup.Activate(); // Ensure focus so Deactivated event works
     }
 
     private static IServiceProvider ConfigureServices()
