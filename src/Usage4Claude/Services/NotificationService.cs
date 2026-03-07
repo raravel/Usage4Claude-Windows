@@ -17,6 +17,8 @@ public class NotificationService : IDisposable
     // Tracking state to avoid duplicate notifications
     private double _lastNotifiedPercentage;
     private bool _wasAboveThreshold;
+    private bool _initialDataReceived;
+    private UsageErrorType? _lastNotifiedErrorType;
     private bool _disposed;
 
     // Notification thresholds
@@ -37,6 +39,15 @@ public class NotificationService : IDisposable
         if (!_settingsService.Settings.NotificationsEnabled) return;
 
         var percentage = data.FiveHour?.Percentage ?? 0;
+
+        // Skip notification on first data fetch (avoid spurious alerts)
+        if (!_initialDataReceived)
+        {
+            _initialDataReceived = true;
+            _lastNotifiedPercentage = percentage;
+            _wasAboveThreshold = percentage >= 50.0;
+            return;
+        }
 
         // Check if we crossed a threshold upward
         foreach (var threshold in WarningThresholds)
@@ -60,12 +71,18 @@ public class NotificationService : IDisposable
 
     private void OnErrorChanged(object? sender, UsageError? error)
     {
-        if (error == null) return;
+        if (error == null)
+        {
+            _lastNotifiedErrorType = null; // Reset when error clears
+            return;
+        }
         if (!_settingsService.Settings.NotificationsEnabled) return;
 
         // Only notify for persistent errors (not transient network issues)
         if (error.ErrorType is UsageErrorType.SessionExpired or UsageErrorType.Unauthorized)
         {
+            if (_lastNotifiedErrorType == error.ErrorType) return; // Already notified
+            _lastNotifiedErrorType = error.ErrorType;
             SendErrorNotification(error);
         }
     }

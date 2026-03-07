@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using H.NotifyIcon;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Toolkit.Uwp.Notifications;
 using Usage4Claude.Services;
 using Usage4Claude.ViewModels;
 using Usage4Claude.Views;
@@ -172,9 +171,6 @@ public partial class App : Application
         Services.GetService<DataRefreshService>()?.Stop();
         Services.GetService<NotificationService>()?.Dispose();
         Services.GetService<IconManager>()?.Dispose();
-
-        // Unregister toast notifications
-        try { ToastNotificationManagerCompat.Uninstall(); } catch { }
 
         _notifyIcon?.Dispose();
         _mutex?.ReleaseMutex();
