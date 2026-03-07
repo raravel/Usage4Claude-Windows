@@ -3,8 +3,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Usage4Claude.Models;
 using Usage4Claude.Services;
+using Usage4Claude.Views;
 
 namespace Usage4Claude.ViewModels;
 
@@ -45,6 +47,7 @@ public class SettingsViewModel : ViewModelBase
         SetCurrentAccountCommand = new RelayCommand(ExecuteSetCurrentAccount, CanExecuteSetCurrentAccount);
         TestConnectionCommand = new AsyncRelayCommand(ExecuteTestConnectionAsync, CanExecuteTestConnection);
         SaveAccountChangesCommand = new RelayCommand(ExecuteSaveAccountChanges, CanExecuteSaveAccountChanges);
+        BrowserLoginCommand = new AsyncRelayCommand(ExecuteBrowserLoginAsync);
 
         // Load initial accounts
         RefreshAccountsList();
@@ -449,6 +452,7 @@ public class SettingsViewModel : ViewModelBase
     public ICommand SetCurrentAccountCommand { get; }
     public ICommand TestConnectionCommand { get; }
     public ICommand SaveAccountChangesCommand { get; }
+    public ICommand BrowserLoginCommand { get; }
 
     // --- Command implementations ---
 
@@ -587,6 +591,17 @@ public class SettingsViewModel : ViewModelBase
         }
 
         RefreshAccountsList();
+    }
+
+    private async Task ExecuteBrowserLoginAsync()
+    {
+        var loginService = App.Current.Services.GetRequiredService<LoginService>();
+        var owner = Application.Current.Windows.OfType<SettingsWindow>().FirstOrDefault();
+        var success = await loginService.StartLoginFlowAsync(owner!);
+        if (success)
+        {
+            RefreshAccountsList();
+        }
     }
 
     // --- Helpers ---

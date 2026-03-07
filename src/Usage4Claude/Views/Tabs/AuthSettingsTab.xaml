@@ -262,8 +262,7 @@
                             Margin="0,0,8,0" />
                     <Button Content="Browser Login"
                             Style="{StaticResource ActionButton}"
-                            IsEnabled="False"
-                            ToolTip="Browser login will be available in a future update." />
+                            Command="{Binding BrowserLoginCommand}" />
                 </StackPanel>
             </StackPanel>
         </Border>
