@@ -35,8 +35,7 @@ public static class LoggingService
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 7,
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
-                fileSizeLimitBytes: 10_000_000, // 10 MB per file
-                shared: true)
+                fileSizeLimitBytes: 10_000_000) // 10 MB per file
             .Enrich.WithProperty("AppVersion", GetAppVersion());
 
         if (debugMode)

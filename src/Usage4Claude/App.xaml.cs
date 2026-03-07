@@ -40,6 +40,7 @@ public partial class App : Application
         DispatcherUnhandledException += (_, args) =>
         {
             Log.Fatal(args.Exception, "Unhandled exception");
+            Log.CloseAndFlush();
             args.Handled = false; // Let it crash, but at least log it
         };
 

@@ -80,9 +80,9 @@ public class CredentialService
             Log.Error(ex, "[CredentialService] File read failed");
             return null;
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
-            Log.Error(ex, "[CredentialService] Deserialization failed");
+            Log.Error("[CredentialService] Credential deserialization failed (data corrupted or format changed)");
             return null;
         }
     }
