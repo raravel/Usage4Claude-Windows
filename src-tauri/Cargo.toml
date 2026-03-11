@@ -30,6 +30,7 @@ reqwest = { version = "0.12", features = ["json", "cookies"] }
 keyring = "3"
 tauri-plugin-autostart = "2"
 tauri-plugin-shell = "2"
+tauri-plugin-notification = "2"
 tokio-util = { version = "0.7", features = ["rt"] }
 image = "0.25"
 uuid = { version = "1", features = ["v4"] }

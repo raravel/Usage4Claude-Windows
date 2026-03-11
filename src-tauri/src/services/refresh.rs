@@ -1,8 +1,10 @@
 use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 use tauri::{AppHandle, Emitter, Manager};
+use tauri_plugin_notification::NotificationExt;
 use crate::AppState;
 use crate::models::settings::RefreshMode;
+use crate::models::usage::UsageData;
 use crate::services::icon_renderer::RENDERED_ICON_SIZE;
 use crate::services::keyring_store::KeyringService;
 use crate::services::smart_monitor::SmartMonitor;
@@ -86,6 +88,9 @@ async fn do_refresh_with_monitor(app: &AppHandle, monitor: &mut SmartMonitor) ->
             // 트레이 툴팁 업데이트
             crate::tray::update_tray_tooltip(app, &data);
 
+            // 알림 확인 및 전송
+            check_and_send_notifications(app, &data);
+
             // 다음 간격 결정
             match refresh_mode {
                 RefreshMode::Smart => {
@@ -164,6 +169,9 @@ pub async fn do_refresh(app: &AppHandle) {
 
             // 트레이 툴팁 업데이트
             crate::tray::update_tray_tooltip(app, &data);
+
+            // 알림 확인 및 전송
+            check_and_send_notifications(app, &data);
         }
         Err(e) => {
             // 실패: 에러 카운트 증가
@@ -197,6 +205,23 @@ pub async fn manual_refresh(app: &AppHandle) -> Result<(), String> {
 
     do_refresh(app).await;
     Ok(())
+}
+
+/// 사용량 데이터를 확인하고 필요한 알림을 전송한다
+// REVIEW: PASS — do_refresh_with_monitor와 do_refresh 두 경로 모두에서 호출됨. NotificationExt::notification().builder()로 Windows Toast 알림 전송, 실패 시 _ = 로 무시해 앱 흐름을 방해하지 않음.
+fn check_and_send_notifications(app: &AppHandle, data: &UsageData) {
+    let state = app.state::<AppState>();
+    let settings = state.settings.lock().unwrap().clone();
+    let mut tracker = state.notification_tracker.lock().unwrap();
+    let notifications = tracker.check(data, &settings);
+
+    for notif in notifications {
+        let _ = app.notification()
+            .builder()
+            .title(&notif.title)
+            .body(&notif.body)
+            .show();
+    }
 }
 
 /// 사용 데이터를 기반으로 트레이 아이콘을 업데이트한다
