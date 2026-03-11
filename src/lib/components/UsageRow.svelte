@@ -1,6 +1,8 @@
 <script lang="ts">
   import CircularProgress from './CircularProgress.svelte';
+  import CountdownTimer from './CountdownTimer.svelte';
   import type { UsageLimitInfo } from '$lib/types';
+  import { settingsStore } from '$lib/state/settings.svelte';
 
   let { limit }: { limit: UsageLimitInfo } = $props();
 
@@ -30,8 +32,23 @@
   });
 </script>
 
-<CircularProgress
-  percentage={pct}
-  {color}
-  label={labelMap[limit.limitType] || limit.limitType}
-/>
+<div class="usage-row">
+  <CircularProgress
+    percentage={pct}
+    {color}
+    label={labelMap[limit.limitType] || limit.limitType}
+  />
+  <CountdownTimer
+    resetsAt={limit.resetsAt}
+    timeFormat={settingsStore.data?.timeFormat ?? 'system'}
+  />
+</div>
+
+<style>
+  .usage-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+</style>
