@@ -129,9 +129,8 @@
   </section>
 
   <!-- 시스템 -->
-  <!-- REVIEW: FAIL — 아래 h3 태그가 하드코딩된 "System" 문자열을 사용함. $t('settings.general.system') 또는 전용 키로 교체 필요. 다른 모든 section 헤더는 $t()를 사용하고 있어 일관성이 없음. -->
   <section class="settings-group">
-    <h3>System</h3>
+    <h3>{$t('settings.general.system')}</h3>
     <div class="setting-row checkbox">
       <label>
         <input type="checkbox" bind:checked={settings.launchAtLogin} onchange={handleLaunchAtLogin} />
