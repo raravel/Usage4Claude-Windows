@@ -10,6 +10,7 @@ use tokio_util::sync::CancellationToken;
 use models::settings::UserSettings;
 use models::usage::UsageData;
 use services::claude_api::ClaudeApiService;
+use services::icon_renderer::IconRenderer;
 
 pub struct AppState {
     pub tray_icon: Mutex<Option<tauri::tray::TrayIcon<tauri::Wry>>>,
@@ -20,6 +21,7 @@ pub struct AppState {
     pub refresh_handle: Mutex<Option<JoinHandle<()>>>,
     pub cancel_token: CancellationToken,
     pub last_refresh: Mutex<Option<std::time::Instant>>,
+    pub icon_renderer: Mutex<IconRenderer>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -52,6 +54,7 @@ pub fn run() {
                 refresh_handle: Mutex::new(Some(handle)),
                 cancel_token,
                 last_refresh: Mutex::new(None),
+                icon_renderer: Mutex::new(IconRenderer::new()),
             };
             app.manage(state);
             Ok(())

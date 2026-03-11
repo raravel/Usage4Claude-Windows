@@ -3,6 +3,7 @@ use tokio_util::sync::CancellationToken;
 use tauri::{AppHandle, Emitter, Manager};
 use crate::AppState;
 use crate::models::settings::RefreshMode;
+use crate::services::icon_renderer::RENDERED_ICON_SIZE;
 use crate::services::keyring_store::KeyringService;
 use crate::services::smart_monitor::SmartMonitor;
 
@@ -79,6 +80,9 @@ async fn do_refresh_with_monitor(app: &AppHandle, monitor: &mut SmartMonitor) ->
             // 프론트엔드에 이벤트 발생
             let _ = app.emit("usage-updated", &data);
 
+            // 트레이 아이콘 업데이트
+            update_tray_icon(app, &data);
+
             // 다음 간격 결정
             match refresh_mode {
                 RefreshMode::Smart => {
@@ -151,6 +155,9 @@ pub async fn do_refresh(app: &AppHandle) {
             }
             // 프론트엔드에 이벤트 발생
             let _ = app.emit("usage-updated", &data);
+
+            // 트레이 아이콘 업데이트
+            update_tray_icon(app, &data);
         }
         Err(e) => {
             // 실패: 에러 카운트 증가
@@ -184,4 +191,45 @@ pub async fn manual_refresh(app: &AppHandle) -> Result<(), String> {
 
     do_refresh(app).await;
     Ok(())
+}
+
+/// 사용 데이터를 기반으로 트레이 아이콘을 업데이트한다
+fn update_tray_icon(app: &AppHandle, data: &crate::models::usage::UsageData) {
+    let state = app.state::<AppState>();
+
+    // 설정 읽기
+    let (display_mode, icon_theme) = {
+        let settings = state.settings.lock().unwrap();
+        (settings.display_mode.clone(), settings.icon_theme.clone())
+    };
+
+    // 가장 높은 사용률의 limit 선택 (limits + extra 통합)
+    let max_limit = data
+        .limits
+        .iter()
+        .chain(data.extra.iter())
+        .max_by(|a, b| a.percentage.partial_cmp(&b.percentage).unwrap_or(std::cmp::Ordering::Equal));
+
+    let Some(limit) = max_limit else {
+        return;
+    };
+
+    // 아이콘 렌더링
+    let rgba = {
+        let mut renderer = state.icon_renderer.lock().unwrap();
+        renderer.render(limit.percentage, &limit.limit_type, &icon_theme, &display_mode)
+    };
+
+    // 트레이 아이콘 설정: lock → 사용 → drop 순서를 명시적으로 관리
+    {
+        let tray_guard = state.tray_icon.lock().unwrap();
+        if let Some(tray_icon) = tray_guard.as_ref() {
+            let icon = tauri::image::Image::new_owned(
+                rgba,
+                RENDERED_ICON_SIZE,
+                RENDERED_ICON_SIZE,
+            );
+            let _ = tray_icon.set_icon(Some(icon));
+        }
+    }
 }
