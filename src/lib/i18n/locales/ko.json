@@ -97,7 +97,12 @@
       "credits": "크레딧",
       "originalAuthor": "원본 macOS 앱 제작",
       "windowsPort": "Windows 포팅",
-      "license": "라이선스"
+      "license": "라이선스",
+      "checkUpdate": "업데이트 확인",
+      "checking": "확인 중...",
+      "newVersion": "새 버전 {version} 사용 가능",
+      "download": "다운로드",
+      "upToDate": "최신 버전입니다"
     }
   },
   "tray": {

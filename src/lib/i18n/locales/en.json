@@ -97,7 +97,12 @@
       "credits": "Credits",
       "originalAuthor": "Original macOS app by",
       "windowsPort": "Windows port by",
-      "license": "License"
+      "license": "License",
+      "checkUpdate": "Check for Updates",
+      "checking": "Checking...",
+      "newVersion": "Version {version} available",
+      "download": "Download",
+      "upToDate": "Up to date"
     }
   },
   "tray": {

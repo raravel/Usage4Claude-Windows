@@ -54,3 +54,12 @@ export interface DiagnosisResult {
   organizations: Organization[];
   errorMessage: string | null;
 }
+
+// REVIEW: PASS — [완료조건2] UpdateInfo 인터페이스가 Rust UpdateInfo 구조체의 camelCase 직렬화와 1:1 매핑됨.
+export interface UpdateInfo {
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+  releaseUrl: string | null;
+  releaseNotes: string | null;
+}

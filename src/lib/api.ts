@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { UsageData, UserSettings, Account, Organization, DiagnosisResult } from './types';
+import type { UsageData, UserSettings, Account, Organization, DiagnosisResult, UpdateInfo } from './types';
 
 export async function getSettings(): Promise<UserSettings> {
   return invoke<UserSettings>('get_settings');
@@ -52,6 +52,10 @@ export async function diagnoseConnection(accountId: string): Promise<DiagnosisRe
 
 export async function getAppVersion(): Promise<string> {
   return invoke<string>('get_app_version');
+}
+
+export async function checkForUpdates(): Promise<UpdateInfo> {
+  return invoke<UpdateInfo>('check_for_updates');
 }
 
 export async function openLoginWindow(): Promise<void> {
