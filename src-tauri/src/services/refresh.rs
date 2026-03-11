@@ -208,6 +208,7 @@ pub async fn manual_refresh(app: &AppHandle) -> Result<(), String> {
 }
 
 /// 사용량 데이터를 확인하고 필요한 알림을 전송한다
+// REVIEW: PASS — do_refresh_with_monitor와 do_refresh 두 경로 모두에서 호출됨. NotificationExt::notification().builder()로 Windows Toast 알림 전송, 실패 시 _ = 로 무시해 앱 흐름을 방해하지 않음.
 fn check_and_send_notifications(app: &AppHandle, data: &UsageData) {
     let state = app.state::<AppState>();
     let settings = state.settings.lock().unwrap().clone();
