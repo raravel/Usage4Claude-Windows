@@ -2,6 +2,7 @@ use reqwest::Client;
 use crate::models::usage::{UsageData, UsageResponse};
 use crate::models::account::Organization;
 use crate::models::error::AppError;
+use crate::services::retry::{retry_with_backoff, RetryConfig};
 
 pub struct ClaudeApiService {
     client: Client,
@@ -108,17 +109,22 @@ impl ClaudeApiService {
         }
     }
 
-    /// 사용량 + 추가 사용량 병렬 요청
+    /// 사용량 + 추가 사용량 요청 (usage는 재시도, extra는 1회만)
     pub async fn fetch_all_usage(&self, org_id: &str, session_key: &str) -> Result<UsageData, AppError> {
-        let (usage_result, extra_result) = tokio::join!(
-            self.get_usage(org_id, session_key),
-            self.get_extra_usage(org_id, session_key),
-        );
+        let config = RetryConfig::default();
+
+        let org_id_owned = org_id.to_string();
+        let session_key_owned = session_key.to_string();
+
+        let usage_result = retry_with_backoff(&config, || {
+            self.get_usage(&org_id_owned, &session_key_owned)
+        }).await;
+
+        // extra는 재시도 없이 1회만
+        let extra_result = self.get_extra_usage(org_id, session_key).await.ok();
 
         let usage = usage_result?;
-        let extra = extra_result.ok(); // 추가 사용량 실패해도 무시
-
-        Ok(UsageData::from_response(&usage, extra.as_ref()))
+        Ok(UsageData::from_response(&usage, extra_result.as_ref()))
     }
 
     /// 공통 응답 처리
