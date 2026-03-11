@@ -1,3 +1,7 @@
+# REVIEW: PASS - v* 태그 push 트리거, tauri-apps/tauri-action@v0으로 NSIS 인스톨러 빌드 및 GitHub Release 생성. GITHUB_TOKEN 권한 contents:write 정확히 설정됨.
+# REVIEW: NOTE - releaseDraft:true 설정으로 Release가 Draft 상태로 생성됨. 릴리즈 후 수동 publish 필요.
+# REVIEW: NOTE - tauri.conf.json NSIS 인스톨러 설정 확인됨: 5개 언어(English/Korean/Japanese/SimpChinese/TradChinese), displayLanguageSelector:true.
+# REVIEW: NOTE - src-tauri/icons/ 에 필요 아이콘 파일 전체 존재 확인됨 (32x32.png, 128x128.png, 128x128@2x.png, icon.icns, icon.ico).
 name: Release
 
 on:

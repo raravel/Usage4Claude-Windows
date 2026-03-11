@@ -1,3 +1,4 @@
+# REVIEW: NOTE - build.yml과 ci.yml이 pull_request 트리거에서 동일한 단계를 실행함. 중복이지만 완료조건 위반은 아님.
 name: Build
 
 on:
