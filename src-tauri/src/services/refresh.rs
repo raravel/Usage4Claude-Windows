@@ -83,6 +83,9 @@ async fn do_refresh_with_monitor(app: &AppHandle, monitor: &mut SmartMonitor) ->
             // 트레이 아이콘 업데이트
             update_tray_icon(app, &data);
 
+            // 트레이 툴팁 업데이트
+            crate::tray::update_tray_tooltip(app, &data);
+
             // 다음 간격 결정
             match refresh_mode {
                 RefreshMode::Smart => {
@@ -158,6 +161,9 @@ pub async fn do_refresh(app: &AppHandle) {
 
             // 트레이 아이콘 업데이트
             update_tray_icon(app, &data);
+
+            // 트레이 툴팁 업데이트
+            crate::tray::update_tray_tooltip(app, &data);
         }
         Err(e) => {
             // 실패: 에러 카운트 증가
