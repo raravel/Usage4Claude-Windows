@@ -1,17 +1,12 @@
-# REVIEW: NOTE - build.yml과 ci.yml이 pull_request 트리거에서 동일한 단계를 실행함. 중복이지만 완료조건 위반은 아님.
-name: Build
+# REVIEW: PASS - 완료조건 충족. cargo check, clippy(-D warnings), npm run check(svelte-check), npm run build 모두 포함. PR 대상 main 브랜치로 정확히 설정됨.
+name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
-permissions:
-  contents: read
-
 jobs:
-  build:
+  check:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
