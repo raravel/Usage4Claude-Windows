@@ -39,3 +39,8 @@ pub async fn fetch_organizations(
 ) -> Result<Vec<Organization>, AppError> {
     state.api_service.get_organizations(&session_key).await
 }
+
+#[tauri::command]
+pub async fn manual_refresh(app: tauri::AppHandle) -> Result<(), String> {
+    crate::services::refresh::manual_refresh(&app).await
+}
