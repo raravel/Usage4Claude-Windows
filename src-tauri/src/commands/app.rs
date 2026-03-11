@@ -3,3 +3,9 @@
 pub fn get_app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
+
+#[tauri::command]
+pub async fn check_for_updates() -> Result<crate::services::update_checker::UpdateInfo, crate::models::error::AppError> {
+    let checker = crate::services::update_checker::UpdateChecker::new();
+    checker.check_for_updates().await
+}

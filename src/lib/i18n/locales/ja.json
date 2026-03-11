@@ -97,7 +97,12 @@
       "credits": "クレジット",
       "originalAuthor": "オリジナルmacOSアプリ制作",
       "windowsPort": "Windowsポート制作",
-      "license": "ライセンス"
+      "license": "ライセンス",
+      "checkUpdate": "アップデートを確認",
+      "checking": "確認中...",
+      "newVersion": "バージョン {version} が利用可能",
+      "download": "ダウンロード",
+      "upToDate": "最新バージョンです"
     }
   },
   "tray": {
