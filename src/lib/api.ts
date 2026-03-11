@@ -65,3 +65,7 @@ export async function closeLoginWindow(): Promise<void> {
 export async function getLoginResult(): Promise<string | null> {
   return invoke<string | null>('get_login_result');
 }
+
+export async function updateTrayLanguage(language: string): Promise<void> {
+  return invoke('update_tray_language', { language });
+}

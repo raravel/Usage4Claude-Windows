@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Usage4Claude",
+    "title": "Usage4Claude for Windows"
+  },
+  "popup": {
+    "refresh": "刷新",
+    "close": "关闭",
+    "loading": "加载数据中...",
+    "noData": "无数据"
+  },
+  "settings": {
+    "tabs": {
+      "general": "常规",
+      "auth": "认证",
+      "about": "关于"
+    },
+    "general": {
+      "display": "显示设置",
+      "displayMode": "显示模式",
+      "percentOnly": "仅百分比",
+      "iconOnly": "仅图标",
+      "iconAndPercent": "图标 + 百分比",
+      "iconTheme": "图标主题",
+      "colorTranslucent": "彩色半透明",
+      "colorWithBackground": "彩色带背景",
+      "monochrome": "单色",
+      "displayContent": "显示内容",
+      "smart": "智能（自动）",
+      "custom": "自定义",
+      "refresh": "刷新",
+      "refreshMode": "刷新模式",
+      "smartMonitoring": "智能监控",
+      "fixedInterval": "固定间隔",
+      "interval": "间隔（分钟）",
+      "minutes": "{min}分钟",
+      "appearance": "外观",
+      "theme": "主题",
+      "themeSystem": "系统",
+      "themeLight": "浅色",
+      "themeDark": "深色",
+      "timeFormat": "时间格式",
+      "timeSystem": "系统",
+      "time12h": "12小时",
+      "time24h": "24小时",
+      "language": "语言",
+      "system": "系统",
+      "autostart": "开机自动启动",
+      "notifications": "使用量警告通知",
+      "resetNotifications": "重置通知"
+    },
+    "auth": {
+      "accounts": "账户列表",
+      "noAccounts": "没有已注册的账户。",
+      "switchTo": "切换到此账户",
+      "activeAccount": "当前活跃账户",
+      "diagnose": "诊断",
+      "diagnosing": "诊断中...",
+      "delete": "删除",
+      "deleteConfirm": "删除账户\"{name}\"？",
+      "sessionKey": "会话密钥",
+      "sessionKeyPlaceholder": "输入sessionKey值",
+      "verify": "验证",
+      "verifying": "验证中...",
+      "addAccount": "添加账户",
+      "browserLogin": "浏览器登录",
+      "loggingIn": "登录中...",
+      "orgSelect": "选择组织",
+      "displayName": "显示名称",
+      "add": "添加",
+      "adding": "添加中...",
+      "cancel": "取消",
+      "show": "显示",
+      "hide": "隐藏",
+      "diagSession": "会话密钥",
+      "diagApi": "API连接",
+      "diagOrgs": "组织",
+      "valid": "有效",
+      "invalid": "无效",
+      "connected": "已连接",
+      "failed": "失败",
+      "openingLogin": "正在打开登录窗口...",
+      "pleaseLogin": "请完成登录...",
+      "extracting": "会话密钥提取完成。正在获取组织信息...",
+      "registering": "正在注册账户...",
+      "selectOrg": "请选择一个组织。",
+      "confirm": "确认",
+      "noOrgsFound": "未找到组织。"
+    },
+    "about": {
+      "version": "版本 {version}",
+      "links": "链接",
+      "github": "GitHub 仓库",
+      "originalProject": "原版 macOS 项目",
+      "kofi": "Ko-fi 支持",
+      "sponsors": "GitHub Sponsors",
+      "credits": "致谢",
+      "originalAuthor": "原版 macOS 应用作者",
+      "windowsPort": "Windows 移植",
+      "license": "许可证"
+    }
+  },
+  "tray": {
+    "refresh": "刷新",
+    "accounts": "账户",
+    "addAccount": "添加账户...",
+    "settings": "设置...",
+    "quit": "退出"
+  },
+  "usage": {
+    "fiveHour": "5小时",
+    "sevenDay": "7天",
+    "opus": "Opus",
+    "sonnet": "Sonnet",
+    "extra": "Extra"
+  },
+  "countdown": {
+    "reset": "重置！",
+    "clickToToggle": "点击切换"
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Usage4Claude",
+    "title": "Usage4Claude for Windows"
+  },
+  "popup": {
+    "refresh": "重新整理",
+    "close": "關閉",
+    "loading": "載入資料中...",
+    "noData": "無資料"
+  },
+  "settings": {
+    "tabs": {
+      "general": "一般",
+      "auth": "驗證",
+      "about": "關於"
+    },
+    "general": {
+      "display": "顯示設定",
+      "displayMode": "顯示模式",
+      "percentOnly": "僅百分比",
+      "iconOnly": "僅圖示",
+      "iconAndPercent": "圖示 + 百分比",
+      "iconTheme": "圖示主題",
+      "colorTranslucent": "彩色半透明",
+      "colorWithBackground": "彩色帶背景",
+      "monochrome": "單色",
+      "displayContent": "顯示內容",
+      "smart": "智慧（自動）",
+      "custom": "自訂",
+      "refresh": "重新整理",
+      "refreshMode": "重新整理模式",
+      "smartMonitoring": "智慧監控",
+      "fixedInterval": "固定間隔",
+      "interval": "間隔（分鐘）",
+      "minutes": "{min}分鐘",
+      "appearance": "外觀",
+      "theme": "主題",
+      "themeSystem": "系統",
+      "themeLight": "淺色",
+      "themeDark": "深色",
+      "timeFormat": "時間格式",
+      "timeSystem": "系統",
+      "time12h": "12小時",
+      "time24h": "24小時",
+      "language": "語言",
+      "system": "系統",
+      "autostart": "開機自動啟動",
+      "notifications": "使用量警告通知",
+      "resetNotifications": "重置通知"
+    },
+    "auth": {
+      "accounts": "帳戶列表",
+      "noAccounts": "沒有已註冊的帳戶。",
+      "switchTo": "切換到此帳戶",
+      "activeAccount": "目前使用中的帳戶",
+      "diagnose": "診斷",
+      "diagnosing": "診斷中...",
+      "delete": "刪除",
+      "deleteConfirm": "刪除帳戶「{name}」？",
+      "sessionKey": "工作階段金鑰",
+      "sessionKeyPlaceholder": "輸入 sessionKey 值",
+      "verify": "驗證",
+      "verifying": "驗證中...",
+      "addAccount": "新增帳戶",
+      "browserLogin": "瀏覽器登入",
+      "loggingIn": "登入中...",
+      "orgSelect": "選擇組織",
+      "displayName": "顯示名稱",
+      "add": "新增",
+      "adding": "新增中...",
+      "cancel": "取消",
+      "show": "顯示",
+      "hide": "隱藏",
+      "diagSession": "工作階段金鑰",
+      "diagApi": "API 連線",
+      "diagOrgs": "組織",
+      "valid": "有效",
+      "invalid": "無效",
+      "connected": "已連線",
+      "failed": "失敗",
+      "openingLogin": "正在開啟登入視窗...",
+      "pleaseLogin": "請完成登入...",
+      "extracting": "工作階段金鑰擷取完成。正在取得組織資訊...",
+      "registering": "正在註冊帳戶...",
+      "selectOrg": "請選擇一個組織。",
+      "confirm": "確認",
+      "noOrgsFound": "找不到組織。"
+    },
+    "about": {
+      "version": "版本 {version}",
+      "links": "連結",
+      "github": "GitHub 儲存庫",
+      "originalProject": "原版 macOS 專案",
+      "kofi": "Ko-fi 贊助",
+      "sponsors": "GitHub Sponsors",
+      "credits": "致謝",
+      "originalAuthor": "原版 macOS 應用程式作者",
+      "windowsPort": "Windows 移植",
+      "license": "授權條款"
+    }
+  },
+  "tray": {
+    "refresh": "重新整理",
+    "accounts": "帳戶",
+    "addAccount": "新增帳戶...",
+    "settings": "設定...",
+    "quit": "結束"
+  },
+  "usage": {
+    "fiveHour": "5小時",
+    "sevenDay": "7天",
+    "opus": "Opus",
+    "sonnet": "Sonnet",
+    "extra": "Extra"
+  },
+  "countdown": {
+    "reset": "重置！",
+    "clickToToggle": "點擊切換"
+  }
+}

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { t } from 'svelte-i18n';
 
   let {
     resetsAt,
@@ -16,7 +17,7 @@
   const remaining = $derived.by(() => {
     const resetTime = new Date(resetsAt).getTime();
     const diff = resetTime - now;
-    if (diff <= 0) return 'Reset!';
+    if (diff <= 0) return $t('countdown.reset');
 
     const hours = Math.floor(diff / 3600000);
     const minutes = Math.floor((diff % 3600000) / 60000);
@@ -50,7 +51,7 @@
   });
 </script>
 
-<button class="countdown" onclick={toggle} title="클릭하여 전환">
+<button class="countdown" onclick={toggle} title={$t('countdown.clickToToggle')}>
   {showAbsolute ? absoluteTime : remaining}
 </button>
 
