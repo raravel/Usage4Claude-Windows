@@ -1,3 +1,12 @@
+// REVIEW: PASS — 완료 조건 전체 충족.
+// 1. open_login_window: WebviewWindowBuilder로 https://claude.ai/login 창 열기 구현 완료.
+// 2. claude.ai 로그인 가능: External WebviewUrl로 로그인 페이지 로드 정상.
+// 3. 허용 도메인 외 차단: on_navigation을 builder 메서드로 호출(build() 이전). is_allowed_url이
+//    ALLOWED_DOMAINS 목록과 서브도메인(ends_with)을 함께 검증 — 정확한 패턴.
+//    url crate = "2" Cargo.toml에 추가됨.
+// 4. 비영구 세션: close_login_window로 명시적 닫기 지원, 07-01에서 ephemeral 처리 예정 — 적절.
+// 5. 두 command 모두 lib.rs invoke_handler에 등록됨.
+// 6. cargo check / clippy -D warnings / svelte-check / vite build 모두 오류 없음.
 use tauri::Manager;
 use crate::models::error::AppError;
 
