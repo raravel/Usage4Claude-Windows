@@ -122,5 +122,20 @@
   "countdown": {
     "reset": "Reset!",
     "clickToToggle": "Click to toggle"
+  },
+  "welcome": {
+    "title": "Welcome to Usage4Claude",
+    "subtitle": "Monitor your Claude AI usage from the system tray",
+    "start": "Get Started",
+    "skip": "Skip",
+    "accountSetup": "Account Setup",
+    "accountDesc": "Add your Claude account to start monitoring",
+    "themeSetup": "Appearance",
+    "themeDesc": "Customize how Usage4Claude looks",
+    "complete": "All Set!",
+    "completeDesc": "You're ready to start monitoring your Claude usage",
+    "finish": "Start",
+    "next": "Next",
+    "back": "Back"
   }
 }
