@@ -122,5 +122,20 @@
   "countdown": {
     "reset": "リセット！",
     "clickToToggle": "クリックして切り替え"
+  },
+  "welcome": {
+    "title": "Usage4Claudeへようこそ",
+    "subtitle": "システムトレイからClaude AIの使用量を監視します",
+    "start": "はじめる",
+    "skip": "スキップ",
+    "accountSetup": "アカウント設定",
+    "accountDesc": "監視を開始するにはClaudeアカウントを追加してください",
+    "themeSetup": "外観設定",
+    "themeDesc": "Usage4Claudeの見た目をカスタマイズします",
+    "complete": "設定完了！",
+    "completeDesc": "Claude使用量の監視を開始する準備ができました",
+    "finish": "開始",
+    "next": "次へ",
+    "back": "戻る"
   }
 }

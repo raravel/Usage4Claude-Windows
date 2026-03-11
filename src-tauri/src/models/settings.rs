@@ -14,6 +14,7 @@ pub struct UserSettings {
     pub launch_at_login: bool,
     pub notifications_enabled: bool,
     pub reset_notifications: bool,
+    pub first_launch_done: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -82,6 +83,7 @@ impl Default for UserSettings {
             launch_at_login: false,
             notifications_enabled: true,
             reset_notifications: true,
+            first_launch_done: false,
         }
     }
 }

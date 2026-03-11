@@ -22,6 +22,22 @@ pub fn update_settings(
 }
 
 #[tauri::command]
+pub fn is_first_launch(state: State<'_, AppState>) -> bool {
+    let settings = state.settings.lock().unwrap();
+    !settings.first_launch_done
+}
+
+#[tauri::command]
+pub fn complete_first_launch(
+    state: State<'_, AppState>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    let mut settings = state.settings.lock().map_err(|e| e.to_string())?;
+    settings.first_launch_done = true;
+    SettingsService::save(&app, &settings)
+}
+
+#[tauri::command]
 pub fn update_tray_language(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
