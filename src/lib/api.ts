@@ -61,3 +61,7 @@ export async function openLoginWindow(): Promise<void> {
 export async function closeLoginWindow(): Promise<void> {
   return invoke('close_login_window');
 }
+
+export async function getLoginResult(): Promise<string | null> {
+  return invoke<string | null>('get_login_result');
+}

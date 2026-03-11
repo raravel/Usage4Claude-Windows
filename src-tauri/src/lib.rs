@@ -22,6 +22,7 @@ pub struct AppState {
     pub cancel_token: CancellationToken,
     pub last_refresh: Mutex<Option<std::time::Instant>>,
     pub icon_renderer: Mutex<IconRenderer>,
+    pub login_session_key: Mutex<Option<String>>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -59,6 +60,7 @@ pub fn run() {
                 cancel_token,
                 last_refresh: Mutex::new(None),
                 icon_renderer: Mutex::new(IconRenderer::new()),
+                login_session_key: Mutex::new(None),
             };
             app.manage(state);
             Ok(())
@@ -78,6 +80,8 @@ pub fn run() {
             commands::app::get_app_version,
             commands::auth::open_login_window,
             commands::auth::close_login_window,
+            commands::auth::receive_login_cookies,
+            commands::auth::get_login_result,
         ])
         .on_window_event(|window, event| {
             if window.label() == "popup" {
