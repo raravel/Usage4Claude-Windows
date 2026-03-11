@@ -24,7 +24,21 @@ pub fn create_tray(
                 app.exit(0);
             }
             "settings" => {
-                // TODO: 설정 윈도우 열기 (이후 태스크)
+                if let Some(window) = app.get_webview_window("settings") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                } else {
+                    let _ = tauri::WebviewWindowBuilder::new(
+                        app,
+                        "settings",
+                        tauri::WebviewUrl::App("/settings".into()),
+                    )
+                    .title("설정")
+                    .inner_size(500.0, 600.0)
+                    .resizable(false)
+                    .center()
+                    .build();
+                }
             }
             "refresh" => {
                 let app_clone = app.clone();
