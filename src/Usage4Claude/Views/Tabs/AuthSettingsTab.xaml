@@ -1,0 +1,313 @@
+<UserControl x:Class="Usage4Claude.Views.Tabs.AuthSettingsTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- Reusable card border style (matching General tab) -->
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="#08000000" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+
+        <!-- Section title style -->
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+
+        <!-- Hint / description text style -->
+        <Style x:Key="HintText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="#888888" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+        </Style>
+
+        <!-- Label style for form fields -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+
+        <!-- Compact button style -->
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <!-- Primary action button style -->
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#0078D4" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#106EBE" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#005A9E" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#CCCCCC" />
+                                <Setter Property="Foreground" Value="#999999" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Danger button style (for remove) -->
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ActionButton}">
+            <Setter Property="Background" Value="#D83B01" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#C43501" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#A52E01" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#CCCCCC" />
+                                <Setter Property="Foreground" Value="#999999" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Current account indicator style -->
+        <Style x:Key="CurrentIndicator" TargetType="Ellipse">
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Height" Value="8" />
+            <Setter Property="Fill" Value="#107C10" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Margin="16">
+
+        <!-- 1. Account List Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Accounts" />
+                <TextBlock Style="{StaticResource HintText}" Text="Manage your Claude accounts. The active account is indicated with a green dot."
+                           Margin="0,0,0,8" />
+
+                <ListBox x:Name="AccountListBox"
+                         ItemsSource="{Binding Accounts}"
+                         SelectedItem="{Binding SelectedAccount}"
+                         MinHeight="60"
+                         MaxHeight="180"
+                         BorderBrush="#DDDDDD"
+                         BorderThickness="1"
+                         Margin="0,0,0,8">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="4,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Current account indicator -->
+                                <Ellipse Grid.Column="0"
+                                         Style="{StaticResource CurrentIndicator}"
+                                         Visibility="{Binding IsCurrent, Converter={StaticResource BoolToVis}}" />
+
+                                <!-- Account display name and org ID -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding DisplayName}" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding TruncatedOrgId}"
+                                               FontSize="10" Foreground="#888888" />
+                                </StackPanel>
+
+                                <!-- Current label -->
+                                <TextBlock Grid.Column="2" Text="Active"
+                                           FontSize="10" Foreground="#107C10"
+                                           VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding IsCurrent, Converter={StaticResource BoolToVis}}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Action buttons -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Set as Active"
+                            Style="{StaticResource ActionButton}"
+                            Command="{Binding SetCurrentAccountCommand}"
+                            Margin="0,0,4,0" />
+                    <Button Content="Remove Selected"
+                            Style="{StaticResource DangerButton}"
+                            Command="{Binding RemoveAccountCommand}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 2. Account Details Card (visible when an account is selected) -->
+        <Border Style="{StaticResource CardBorder}"
+                Visibility="{Binding HasSelectedAccount, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Account Details" />
+
+                <!-- Display Name -->
+                <TextBlock Style="{StaticResource FieldLabel}" Text="Display Name" />
+                <TextBox x:Name="EditDisplayNameBox"
+                         Text="{Binding EditDisplayName, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="12" Padding="4" Margin="0,0,0,8" />
+
+                <!-- Organization ID (read-only) -->
+                <TextBlock Style="{StaticResource FieldLabel}" Text="Organization ID" />
+                <TextBox Text="{Binding EditOrgId, Mode=OneWay}"
+                         FontSize="12" Padding="4" Margin="0,0,0,8"
+                         IsReadOnly="True" Background="#F5F5F5" />
+
+                <!-- Session Key (masked) -->
+                <TextBlock Style="{StaticResource FieldLabel}" Text="Session Key" />
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <PasswordBox x:Name="EditSessionKeyBox"
+                                 FontSize="12" Padding="4"
+                                 PasswordChanged="EditSessionKeyBox_PasswordChanged" />
+                    <TextBox x:Name="EditSessionKeyTextBox"
+                             FontSize="12" Padding="4"
+                             Text="{Binding EditSessionKey, UpdateSourceTrigger=PropertyChanged}"
+                             Visibility="Collapsed" />
+                    <Button Grid.Column="1" Content="Show"
+                            Style="{StaticResource ActionButton}"
+                            Margin="4,0,0,0"
+                            Click="ToggleEditSessionKeyVisibility_Click" />
+                </Grid>
+
+                <!-- Save Changes button -->
+                <Button Content="Save Changes"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding SaveAccountChangesCommand}"
+                        HorizontalAlignment="Left" />
+            </StackPanel>
+        </Border>
+
+        <!-- 3. Manual Session Key Entry Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Add Account" />
+                <TextBlock Style="{StaticResource HintText}" Text="Enter your session key and organization ID to add a new account."
+                           Margin="0,0,0,8" />
+
+                <!-- Organization ID -->
+                <TextBlock Style="{StaticResource FieldLabel}" Text="Organization ID" />
+                <TextBox Text="{Binding NewOrgId, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="12" Padding="4" Margin="0,0,0,8" />
+
+                <!-- Session Key -->
+                <TextBlock Style="{StaticResource FieldLabel}" Text="Session Key" />
+                <PasswordBox x:Name="NewSessionKeyBox"
+                             FontSize="12" Padding="4" Margin="0,0,0,8"
+                             PasswordChanged="NewSessionKeyBox_PasswordChanged" />
+
+                <!-- Display Name (optional) -->
+                <TextBlock Style="{StaticResource FieldLabel}" Text="Display Name (optional)" />
+                <TextBox Text="{Binding NewDisplayName, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="12" Padding="4" Margin="0,0,0,8" />
+
+                <!-- Add Account + Browser Login buttons -->
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Add Account"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding AddAccountCommand}"
+                            Margin="0,0,8,0" />
+                    <Button Content="Browser Login"
+                            Style="{StaticResource ActionButton}"
+                            IsEnabled="False"
+                            ToolTip="Browser login will be available in a future update." />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 4. Connection Diagnostic Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Connection Diagnostic" />
+                <TextBlock Style="{StaticResource HintText}" Text="Test the connection to Claude API with the currently active account."
+                           Margin="0,0,0,8" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Content="Test Connection"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding TestConnectionCommand}"
+                            Margin="0,0,8,0" />
+
+                    <!-- Spinner while testing -->
+                    <TextBlock Text="Testing..."
+                               FontSize="12" Foreground="#888888"
+                               VerticalAlignment="Center"
+                               Visibility="{Binding IsDiagnosticRunning, Converter={StaticResource BoolToVis}}" />
+                </StackPanel>
+
+                <!-- Diagnostic result -->
+                <TextBlock Text="{Binding DiagnosticResult}"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DiagnosticSuccess}" Value="True">
+                                    <Setter Property="Foreground" Value="#107C10" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding DiagnosticSuccess}" Value="False">
+                                    <Setter Property="Foreground" Value="#D83B01" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+    </StackPanel>
+</UserControl>

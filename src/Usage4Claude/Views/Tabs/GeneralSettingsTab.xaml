@@ -1,0 +1,283 @@
+<UserControl x:Class="Usage4Claude.Views.Tabs.GeneralSettingsTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:helpers="clr-namespace:Usage4Claude.Helpers">
+
+    <UserControl.Resources>
+        <helpers:EnumToBoolConverter x:Key="EnumToBool" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- Reusable card border style -->
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="#08000000" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+
+        <!-- Section title style -->
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+
+        <!-- Hint / description text style -->
+        <Style x:Key="HintText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="#888888" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+        </Style>
+
+        <!-- Setting option RadioButton style (clean, no bullet) -->
+        <Style x:Key="OptionRadioButton" TargetType="RadioButton">
+            <Setter Property="Margin" Value="0,3" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <!-- Setting CheckBox style -->
+        <Style x:Key="OptionCheckBox" TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,3" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Margin="16">
+
+        <!-- 1. Display Settings Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Display" />
+                <TextBlock Style="{StaticResource HintText}" Text="Choose how the tray icon appears."
+                           Margin="0,0,0,8" />
+
+                <!-- Icon Style -->
+                <TextBlock Text="Icon style" FontSize="12" FontWeight="Medium" Margin="0,0,0,4" />
+                <StackPanel Margin="8,0,0,8">
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="IconStyle" Content="Color Translucent"
+                                 IsChecked="{Binding IconStyleMode, Converter={StaticResource EnumToBool}, ConverterParameter=ColorTranslucent}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="IconStyle" Content="Color With Background"
+                                 IsChecked="{Binding IconStyleMode, Converter={StaticResource EnumToBool}, ConverterParameter=ColorWithBackground}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="IconStyle" Content="Monochrome"
+                                 IsChecked="{Binding IconStyleMode, Converter={StaticResource EnumToBool}, ConverterParameter=Monochrome}" />
+                </StackPanel>
+
+                <!-- Display Content -->
+                <TextBlock Text="Display content" FontSize="12" FontWeight="Medium" Margin="0,0,0,4" />
+                <StackPanel Margin="8,0,0,0">
+                    <CheckBox Style="{StaticResource OptionCheckBox}"
+                              Content="Show Icon"
+                              IsChecked="{Binding ShowIcon}" />
+                    <CheckBox Style="{StaticResource OptionCheckBox}"
+                              Content="Show Percentage"
+                              IsChecked="{Binding ShowPercentage}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 2. Display Options Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Display Options" />
+                <TextBlock Style="{StaticResource HintText}" Text="Control which usage limits are displayed."
+                           Margin="0,0,0,8" />
+
+                <!-- Display Mode -->
+                <StackPanel Margin="0,0,0,4">
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="DisplayMode" Content="Smart"
+                                 IsChecked="{Binding DisplayMode, Converter={StaticResource EnumToBool}, ConverterParameter=Smart}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="DisplayMode" Content="Custom"
+                                 IsChecked="{Binding DisplayMode, Converter={StaticResource EnumToBool}, ConverterParameter=Custom}" />
+                </StackPanel>
+
+                <!-- Custom Limit Type checkboxes (visible only in Custom mode) -->
+                <StackPanel Margin="20,4,0,0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DisplayMode}" Value="Custom">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <CheckBox Style="{StaticResource OptionCheckBox}"
+                              Content="5-Hour Limit"
+                              IsChecked="{Binding ShowFiveHour}" />
+                    <CheckBox Style="{StaticResource OptionCheckBox}"
+                              Content="7-Day Limit"
+                              IsChecked="{Binding ShowSevenDay}" />
+                    <CheckBox Style="{StaticResource OptionCheckBox}"
+                              Content="Extra Usage"
+                              IsChecked="{Binding ShowExtraUsage}" />
+                    <CheckBox Style="{StaticResource OptionCheckBox}"
+                              Content="Opus Weekly"
+                              IsChecked="{Binding ShowOpusWeekly}" />
+                    <CheckBox Style="{StaticResource OptionCheckBox}"
+                              Content="Sonnet Weekly"
+                              IsChecked="{Binding ShowSonnetWeekly}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 3. Refresh Settings Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Refresh" />
+
+                <!-- Refresh Mode -->
+                <StackPanel Margin="0,0,0,4">
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="RefreshMode" Content="Smart"
+                                 IsChecked="{Binding RefreshMode, Converter={StaticResource EnumToBool}, ConverterParameter=Smart}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="RefreshMode" Content="Fixed"
+                                 IsChecked="{Binding RefreshMode, Converter={StaticResource EnumToBool}, ConverterParameter=Fixed}" />
+                </StackPanel>
+
+                <!-- Fixed interval ComboBox (visible only in Fixed mode) -->
+                <StackPanel Margin="20,4,0,0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding RefreshMode}" Value="Fixed">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="Refresh interval:" FontSize="12" Margin="0,0,0,4" />
+                    <ComboBox Width="120" HorizontalAlignment="Left"
+                              ItemsSource="{Binding RefreshIntervalOptions}"
+                              DisplayMemberPath="DisplayName"
+                              SelectedValuePath="Seconds"
+                              SelectedValue="{Binding RefreshIntervalSeconds}" />
+                </StackPanel>
+
+                <!-- Hint text that changes based on mode -->
+                <TextBlock>
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                            <Setter Property="Text" Value="Smart mode adjusts refresh rate based on usage changes." />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding RefreshMode}" Value="Fixed">
+                                    <Setter Property="Text" Value="Fixed interval between refreshes." />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- 4. Notification Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Notifications" />
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Style="{StaticResource OptionCheckBox}"
+                              Content="Enable notifications"
+                              IsChecked="{Binding NotificationsEnabled}" />
+                    <Button Content="Test"
+                            Command="{Binding TestNotificationCommand}"
+                            Margin="8,0,0,0"
+                            Padding="8,2"
+                            FontSize="11"
+                            VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Style="{StaticResource HintText}"
+                           Text="Receive alerts when usage limits are approaching or reset." />
+            </StackPanel>
+        </Border>
+
+        <!-- 5. Appearance Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Appearance" />
+                <TextBlock Style="{StaticResource HintText}" Text="Choose the application color theme."
+                           Margin="0,0,0,8" />
+                <StackPanel>
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="Appearance" Content="System"
+                                 IsChecked="{Binding Appearance, Converter={StaticResource EnumToBool}, ConverterParameter=System}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="Appearance" Content="Light"
+                                 IsChecked="{Binding Appearance, Converter={StaticResource EnumToBool}, ConverterParameter=Light}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="Appearance" Content="Dark"
+                                 IsChecked="{Binding Appearance, Converter={StaticResource EnumToBool}, ConverterParameter=Dark}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 6. Time Format Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Time Format" />
+                <TextBlock Style="{StaticResource HintText}" Text="Choose how times are displayed."
+                           Margin="0,0,0,8" />
+                <StackPanel>
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="TimeFormat" Content="System"
+                                 IsChecked="{Binding TimeFormat, Converter={StaticResource EnumToBool}, ConverterParameter=System}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="TimeFormat" Content="12-Hour"
+                                 IsChecked="{Binding TimeFormat, Converter={StaticResource EnumToBool}, ConverterParameter=TwelveHour}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="TimeFormat" Content="24-Hour"
+                                 IsChecked="{Binding TimeFormat, Converter={StaticResource EnumToBool}, ConverterParameter=TwentyFourHour}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 7. Language Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Language" />
+                <TextBlock Style="{StaticResource HintText}" Text="Select the interface language."
+                           Margin="0,0,0,8" />
+                <StackPanel>
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="Language" Content="English"
+                                 IsChecked="{Binding Language, Converter={StaticResource EnumToBool}, ConverterParameter=English}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="Language" Content="Japanese"
+                                 IsChecked="{Binding Language, Converter={StaticResource EnumToBool}, ConverterParameter=Japanese}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="Language" Content="Chinese (Simplified)"
+                                 IsChecked="{Binding Language, Converter={StaticResource EnumToBool}, ConverterParameter=Chinese}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="Language" Content="Chinese (Traditional)"
+                                 IsChecked="{Binding Language, Converter={StaticResource EnumToBool}, ConverterParameter=ChineseTraditional}" />
+                    <RadioButton Style="{StaticResource OptionRadioButton}"
+                                 GroupName="Language" Content="Korean"
+                                 IsChecked="{Binding Language, Converter={StaticResource EnumToBool}, ConverterParameter=Korean}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 8. Launch at Login Card -->
+        <Border Style="{StaticResource CardBorder}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource SectionTitle}" Text="Startup" />
+                <CheckBox Style="{StaticResource OptionCheckBox}"
+                          Content="Launch at login"
+                          IsChecked="{Binding LaunchAtLogin}" />
+                <TextBlock Style="{StaticResource HintText}"
+                           Text="Automatically start Usage4Claude when you log in to Windows." />
+            </StackPanel>
+        </Border>
+
+    </StackPanel>
+</UserControl>

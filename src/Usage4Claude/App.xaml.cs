@@ -1,0 +1,312 @@
+using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using H.NotifyIcon;
+using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using Usage4Claude.Services;
+using Usage4Claude.ViewModels;
+using Usage4Claude.Views;
+
+namespace Usage4Claude;
+
+/// <summary>
+/// Interaction logic for App.xaml
+/// </summary>
+public partial class App : Application
+{
+    /// <summary>
+    /// Typed accessor for the current Application instance.
+    /// </summary>
+    public new static App Current => (App)Application.Current;
+
+    /// <summary>
+    /// The application-wide DI service provider.
+    /// </summary>
+    public IServiceProvider Services { get; private set; } = null!;
+
+    private static Mutex? _mutex;
+    private TaskbarIcon? _notifyIcon;
+    private PopupWindow? _activePopup;
+    private SettingsWindow? _settingsWindow;
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        // Initialize logging early (before anything else)
+        var isDebugMode = e.Args.Contains("--debug");
+        LoggingService.Initialize(isDebugMode);
+
+        // Global unhandled exception handlers
+        DispatcherUnhandledException += (_, args) =>
+        {
+            Log.Fatal(args.Exception, "Unhandled exception");
+            Log.CloseAndFlush();
+            args.Handled = false; // Let it crash, but at least log it
+        };
+
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            if (args.ExceptionObject is Exception ex)
+                Log.Fatal(ex, "Unhandled domain exception");
+            Log.CloseAndFlush();
+        };
+
+        // Single instance check
+        const string mutexName = "Usage4Claude-Windows-SingleInstance";
+        _mutex = new Mutex(true, mutexName, out bool isNewInstance);
+
+        if (!isNewInstance)
+        {
+            _mutex.Dispose();
+            _mutex = null;
+            MessageBox.Show("Usage4Claude is already running.", "Usage4Claude",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            Shutdown();
+            return;
+        }
+
+        base.OnStartup(e);
+
+        // Configure DI container
+        Services = ConfigureServices();
+
+        // Initialize localization early (before other services that might need localized strings)
+        _ = Services.GetRequiredService<LocalizationService>();
+
+        // Show welcome window on first launch
+        var settingsService = Services.GetRequiredService<SettingsService>();
+        if (settingsService.Settings.IsFirstLaunch)
+        {
+            var welcomeWindow = new WelcomeWindow();
+            welcomeWindow.ShowDialog();
+            // Settings are saved by WelcomeWindow.Finish_Click
+            // If the user closed without finishing, mark first launch as done anyway
+            // to prevent the wizard from appearing repeatedly
+            if (settingsService.Settings.IsFirstLaunch)
+            {
+                settingsService.Settings.IsFirstLaunch = false;
+                settingsService.Save();
+            }
+        }
+
+        // Initialize system tray icon
+        _notifyIcon = (TaskbarIcon)FindResource("NotifyIcon");
+
+        // Wire up the exit menu item via code-behind
+        WireUpContextMenu();
+
+        _notifyIcon.ForceCreate(enablesEfficiencyMode: false);
+
+        // Initialize the icon manager to handle dynamic tray icon updates
+        var iconManager = Services.GetRequiredService<IconManager>();
+        iconManager.Initialize(_notifyIcon);
+
+        // Start periodic data refresh
+        var refreshService = Services.GetRequiredService<DataRefreshService>();
+        refreshService.Start();
+
+        // Initialize notification service (subscribes to refresh events)
+        var notificationService = Services.GetRequiredService<NotificationService>();
+
+        // Build dynamic account submenu and subscribe to changes
+        var accountManager = Services.GetRequiredService<AccountManager>();
+        accountManager.AccountListChanged += (_, _) => Dispatcher.BeginInvoke(RebuildAccountMenu);
+        accountManager.CurrentAccountChanged += (_, _) => Dispatcher.BeginInvoke(RebuildAccountMenu);
+        RebuildAccountMenu();
+
+        // Wire up left-click on tray icon to show the popup window
+        _notifyIcon.TrayLeftMouseDown += (_, _) => ShowPopupWindow();
+    }
+
+    private void ShowPopupWindow()
+    {
+        // Close existing popup if open (toggle behavior)
+        if (_activePopup is { IsLoaded: true })
+        {
+            _activePopup.Close();
+            _activePopup = null;
+            return;
+        }
+
+        var viewModel = Services.GetRequiredService<MainViewModel>();
+
+        // Trigger a smart refresh (throttled to 30s minimum)
+        var refreshService = Services.GetRequiredService<DataRefreshService>();
+        _ = refreshService.RefreshOnPopoverOpenAsync();
+
+        _activePopup = new PopupWindow { DataContext = viewModel };
+        _activePopup.Show();
+        _activePopup.PositionNearTray();
+        _activePopup.Activate(); // Ensure focus so Deactivated event works
+    }
+
+    private static IServiceProvider ConfigureServices()
+    {
+        var services = new ServiceCollection();
+
+        // Services (Singleton)
+        services.AddSingleton<SettingsService>();
+        services.AddSingleton<ClaudeApiService>();
+        services.AddSingleton<CredentialService>();
+        services.AddSingleton<AccountManager>();
+        services.AddSingleton<SmartMonitorService>();
+        services.AddSingleton<DataRefreshService>();
+        services.AddSingleton<IconManager>();
+        services.AddSingleton<AutoStartService>();
+        services.AddSingleton<UpdateCheckService>();
+        services.AddSingleton<LocalizationService>();
+        services.AddSingleton<NotificationService>();
+
+        // ViewModels (Singleton - subscribes to service events)
+        services.AddSingleton<MainViewModel>();
+        services.AddSingleton<SettingsViewModel>();
+
+        return services.BuildServiceProvider();
+    }
+
+    private void WireUpContextMenu()
+    {
+        if (_notifyIcon?.ContextMenu is not ContextMenu contextMenu) return;
+
+        foreach (var item in contextMenu.Items)
+        {
+            if (item is MenuItem menuItem && menuItem.Tag is string tag)
+            {
+                switch (tag)
+                {
+                    case "Exit":
+                        menuItem.Click += (_, _) => Shutdown();
+                        break;
+                    case "Refresh":
+                        menuItem.Click += async (_, _) =>
+                        {
+                            var refreshService = Services.GetService<DataRefreshService>();
+                            if (refreshService != null)
+                                await refreshService.ManualRefreshAsync();
+                        };
+                        break;
+                    case "Settings":
+                        menuItem.Click += (_, _) => ShowSettingsWindow();
+                        break;
+                }
+            }
+        }
+    }
+
+    private void ShowSettingsWindow(int tabIndex = 0)
+    {
+        if (_settingsWindow is { IsLoaded: true })
+        {
+            _settingsWindow.NavigateToTab(tabIndex);
+            _settingsWindow.Activate();
+            return;
+        }
+
+        var viewModel = Services.GetRequiredService<SettingsViewModel>();
+        _settingsWindow = new SettingsWindow { DataContext = viewModel };
+        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.Show();
+        _settingsWindow.NavigateToTab(tabIndex);
+    }
+
+    private void RebuildAccountMenu()
+    {
+        if (_notifyIcon?.ContextMenu is not ContextMenu contextMenu) return;
+
+        var accountManager = Services.GetRequiredService<AccountManager>();
+
+        // Remove existing account items
+        var toRemove = contextMenu.Items.OfType<MenuItem>()
+            .Where(m => m.Tag is string t && t.StartsWith("Account_"))
+            .ToList();
+        foreach (var item in toRemove)
+            contextMenu.Items.Remove(item);
+
+        // Also remove old separator if exists
+        var oldSep = contextMenu.Items.OfType<Separator>()
+            .FirstOrDefault(s => s.Tag is string t && t == "AccountSeparator");
+        if (oldSep != null)
+            contextMenu.Items.Remove(oldSep);
+
+        if (!accountManager.HasAccounts || accountManager.Accounts.Count <= 1)
+            return;
+
+        // Find insertion point (before the Settings item)
+        int settingsIndex = -1;
+        for (int i = 0; i < contextMenu.Items.Count; i++)
+        {
+            if (contextMenu.Items[i] is MenuItem mi && mi.Tag is string tag && tag == "Settings")
+            {
+                settingsIndex = i;
+                break;
+            }
+        }
+        if (settingsIndex < 0) return;
+
+        // Insert account items before Settings
+        int insertAt = settingsIndex;
+        foreach (var account in accountManager.Accounts)
+        {
+            var isCurrent = account.Id == accountManager.CurrentAccount?.Id;
+            var menuItem = new MenuItem
+            {
+                Header = account.DisplayName,
+                Tag = $"Account_{account.Id}",
+                // Use a visual indicator instead of IsCheckable to avoid auto-toggle before Click handler
+                Icon = isCurrent
+                    ? new System.Windows.Shapes.Ellipse
+                    {
+                        Width = 8,
+                        Height = 8,
+                        Fill = System.Windows.Media.Brushes.Green
+                    }
+                    : null,
+                FontWeight = isCurrent ? FontWeights.Bold : FontWeights.Normal
+            };
+            var accountId = account.Id; // Capture for closure
+            menuItem.Click += (_, _) => SwitchAccount(accountId);
+            contextMenu.Items.Insert(insertAt, menuItem);
+            insertAt++;
+        }
+
+        // Insert separator after account items
+        var sep = new Separator { Tag = "AccountSeparator" };
+        contextMenu.Items.Insert(insertAt, sep);
+    }
+
+    private void SwitchAccount(Guid accountId)
+    {
+        var accountManager = Services.GetRequiredService<AccountManager>();
+        if (accountManager.SwitchAccount(accountId))
+        {
+            // Reset and restart data refresh for the new account
+            var refreshService = Services.GetRequiredService<DataRefreshService>();
+            refreshService.Reset();
+            refreshService.Start();
+
+            // Update icon
+            var iconManager = Services.GetRequiredService<IconManager>();
+            iconManager.RefreshIcon();
+
+            // Note: MainViewModel.UpdateAccountInfo() and RebuildAccountMenu() are
+            // triggered automatically via CurrentAccountChanged event subscription.
+        }
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        // Stop background services
+        Services.GetService<DataRefreshService>()?.Stop();
+        Services.GetService<NotificationService>()?.Dispose();
+        Services.GetService<IconManager>()?.Dispose();
+
+        _notifyIcon?.Dispose();
+        _mutex?.ReleaseMutex();
+        _mutex?.Dispose();
+
+        // Flush and close logging
+        LoggingService.Shutdown();
+
+        base.OnExit(e);
+    }
+}

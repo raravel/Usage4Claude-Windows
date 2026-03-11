@@ -1,0 +1,42 @@
+# Build results
+bin/
+obj/
+publish/
+.vs/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+packages/
+*.nupkg
+
+# IDE
+.idea/
+*.DotSettings.user
+*.swp
+
+# Archives
+*.zip
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Reference project (macOS original)
+/Usage4Claude/
+
+# Node.js
+node_modules/
+
+# Vite / SvelteKit build
+build/
+.svelte-kit/
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
