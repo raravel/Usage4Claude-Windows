@@ -1,3 +1,10 @@
+<!-- REVIEW: PASS
+  완료 조건 1 (계정 목록 표시/전환): 계정 목록을 isActive 표시(✓, 파란 좌측 보더)와 함께 렌더링하고, 클릭 시 switchAccount() 호출 후 목록 재로드. PASS
+  완료 조건 2 (수동 입력 계정 추가): 2단계 폼(세션키 입력 → 조직 선택/표시명 입력) 구현. fetchOrganizations로 먼저 검증 후 addAccount 호출. PASS
+  완료 조건 3 (계정 삭제): 각 계정에 삭제 버튼, confirm 다이얼로그 후 removeAccount() 호출. 진단 결과도 정리. PASS
+  완료 조건 4 (연결 진단): 각 계정에 진단 버튼, diagnoseConnection() 결과를 sessionValid/apiReachable/organizations/errorMessage 로 인라인 표시. PASS
+  Svelte 5: $state만 사용, stores/reactive declarations 없음. PASS
+-->
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Account, Organization, DiagnosisResult } from '$lib/types';

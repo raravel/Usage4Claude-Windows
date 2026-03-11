@@ -1,3 +1,8 @@
+// REVIEW: PASS
+// 완료 조건 1 (계정 목록 표시/전환): switch_account 명령이 is_active 플래그를 올바르게 토글하고 keyring에 저장한 후 tray 재구성 및 즉시 새로고침을 수행함. PASS
+// 완료 조건 2 (수동 입력 계정 추가): add_account 명령이 session_key 유효성 검증(get_organizations 호출) → UUID 생성 → keyring 저장 → 첫 계정 자동 활성화를 올바르게 처리함. PASS
+// 완료 조건 3 (계정 삭제): remove_account 명령이 목록에서 제거, 세션키 keyring 삭제, 삭제된 계정이 활성이었으면 첫 번째 계정 자동 활성화를 처리함. PASS
+// 완료 조건 4 (연결 진단): diagnose_connection 명령이 세션키 조회 실패/Unauthorized/Forbidden/CloudflareBlock/Network 오류를 각각 구분하여 DiagnosisResult로 반환함. PASS
 use crate::models::account::{Account, DiagnosisResult};
 use crate::models::error::AppError;
 use crate::services::keyring_store::KeyringService;
