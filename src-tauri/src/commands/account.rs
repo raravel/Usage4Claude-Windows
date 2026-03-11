@@ -1,6 +1,7 @@
 use crate::models::account::{Account, DiagnosisResult};
 use crate::models::error::AppError;
 use crate::services::keyring_store::KeyringService;
+use tauri::Emitter;
 
 #[tauri::command]
 pub fn get_accounts() -> Result<Vec<Account>, AppError> {
@@ -58,6 +59,9 @@ pub async fn add_account(
     // 트레이 메뉴 재구성
     let _ = crate::tray::rebuild_tray_menu(&app);
 
+    // 프론트엔드에 계정 변경 이벤트 emit
+    let _ = app.emit("account-changed", ());
+
     Ok(account)
 }
 
@@ -93,6 +97,9 @@ pub fn remove_account(
     // 트레이 메뉴 재구성
     let _ = crate::tray::rebuild_tray_menu(&app);
 
+    // 프론트엔드에 계정 변경 이벤트 emit
+    let _ = app.emit("account-changed", ());
+
     Ok(())
 }
 
@@ -117,6 +124,9 @@ pub async fn switch_account(
 
     // 트레이 메뉴 재구성
     let _ = crate::tray::rebuild_tray_menu(&app);
+
+    // 프론트엔드에 계정 변경 이벤트 emit
+    let _ = app.emit("account-changed", ());
 
     // 즉시 새로고침
     crate::services::refresh::do_refresh(&app).await;

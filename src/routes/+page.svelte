@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
   import { usageStore } from '$lib/state/usage.svelte';
+  import { accountsStore } from '$lib/state/accounts.svelte';
   import { manualRefresh } from '$lib/api';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import UsageRow from '$lib/components/UsageRow.svelte';
@@ -37,7 +38,12 @@
 
 <div class="popup-container">
   <header class="popup-header">
-    <h1>{$t('app.name')}</h1>
+    <div class="header-title">
+      <h1>{$t('app.name')}</h1>
+      {#if accountsStore.activeAccount}
+        <span class="account-name">{accountsStore.activeAccount.displayName}</span>
+      {/if}
+    </div>
     <div class="header-actions">
       <button onclick={handleRefresh} disabled={refreshing} title={$t('popup.refresh')}>&#8635;</button>
       <button onclick={handleClose} title={$t('popup.close')}>&times;</button>
@@ -93,6 +99,18 @@
     font-size: 14px;
     margin: 0;
     font-weight: 600;
+  }
+
+  .header-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .account-name {
+    font-size: 11px;
+    color: #888;
+    font-weight: 400;
   }
 
   .header-actions {
