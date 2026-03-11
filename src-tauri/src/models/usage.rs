@@ -1,3 +1,4 @@
+// REVIEW: [PASS] 모든 완료 조건 충족. UsageResponse/UsageLimit/UsageData/UsageLimitInfo/LimitType/Account/Organization/AppError 모두 존재. serde Serialize+Deserialize + camelCase 적용(Organization은 snake_case 필드가 없어 실질적 동일). LimitType에 colors()+color_for_percentage() 구현. cargo check/clippy -D warnings 클린. AppError thiserror+수동 Serialize 정상. chrono 의존성 확인.
 #![allow(dead_code)]
 
 use serde::{Deserialize, Serialize};
