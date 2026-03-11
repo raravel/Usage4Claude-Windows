@@ -3,6 +3,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Manager,
 };
+use tauri_plugin_positioner::{Position, WindowExt};
 
 use crate::services::keyring_store::KeyringService;
 
@@ -43,14 +44,23 @@ pub fn create_tray(
             }
             _ => {}
         })
-        .on_tray_icon_event(|_tray, event| {
+        .on_tray_icon_event(|tray, event| {
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
                 button_state: MouseButtonState::Up,
                 ..
             } = event
             {
-                // TODO: 팝업 윈도우 열기 (이후 태스크)
+                let app = tray.app_handle();
+                if let Some(window) = app.get_webview_window("popup") {
+                    if window.is_visible().unwrap_or(false) {
+                        let _ = window.hide();
+                    } else {
+                        let _ = window.move_window(Position::TrayCenter);
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
+                }
             }
         })
         .build(app)
