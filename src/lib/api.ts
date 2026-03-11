@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { UsageData, UserSettings, Account, Organization } from './types';
+import type { UsageData, UserSettings, Account, Organization, DiagnosisResult } from './types';
 
 export async function getSettings(): Promise<UserSettings> {
   return invoke<UserSettings>('get_settings');
@@ -27,4 +27,25 @@ export async function validateSession(accountId: string): Promise<boolean> {
 
 export async function fetchOrganizations(sessionKey: string): Promise<Organization[]> {
   return invoke<Organization[]>('fetch_organizations', { sessionKey });
+}
+
+export async function addAccount(
+  sessionKey: string,
+  orgId: string,
+  displayName: string,
+  orgName: string
+): Promise<Account> {
+  return invoke<Account>('add_account', { sessionKey, orgId, displayName, orgName });
+}
+
+export async function removeAccount(accountId: string): Promise<void> {
+  return invoke('remove_account', { accountId });
+}
+
+export async function switchAccount(accountId: string): Promise<void> {
+  return invoke('switch_account', { accountId });
+}
+
+export async function diagnoseConnection(accountId: string): Promise<DiagnosisResult> {
+  return invoke<DiagnosisResult>('diagnose_connection', { accountId });
 }

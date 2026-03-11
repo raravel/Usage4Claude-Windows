@@ -69,6 +69,10 @@ pub fn run() {
             commands::usage::manual_refresh,
             commands::account::get_accounts,
             commands::account::validate_session,
+            commands::account::add_account,
+            commands::account::remove_account,
+            commands::account::switch_account,
+            commands::account::diagnose_connection,
         ])
         .on_window_event(|window, event| {
             if window.label() == "popup" {

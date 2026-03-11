@@ -3,6 +3,7 @@
   import { getSettings } from '$lib/api';
   import type { UserSettings } from '$lib/types';
   import GeneralTab from '$lib/components/GeneralTab.svelte';
+  import AuthTab from '$lib/components/AuthTab.svelte';
 
   let activeTab = $state<'general' | 'auth' | 'about'>('general');
   let settings = $state<UserSettings | null>(null);
@@ -31,7 +32,7 @@
     {:else if activeTab === 'general'}
       <div class="tab-panel">설정을 불러오는 중...</div>
     {:else if activeTab === 'auth'}
-      <div class="tab-panel">인증 설정 (다음 태스크에서 구현)</div>
+      <AuthTab />
     {:else}
       <div class="tab-panel">정보 (다음 태스크에서 구현)</div>
     {/if}
