@@ -4,8 +4,9 @@
 // REVIEW: [조건3] handleLaunchAtLogin에서 @tauri-apps/plugin-autostart의 enable/disable 호출, capabilities 및 Rust 플러그인 등록 모두 확인
 // REVIEW: Svelte 5 Runes($props, $bindable) 사용 — stores 없음, $: 없음 — 규칙 준수
 <script lang="ts">
+  import { t, locale } from 'svelte-i18n';
   import type { UserSettings } from '$lib/types';
-  import { updateSettings } from '$lib/api';
+  import { updateSettings, updateTrayLanguage } from '$lib/api';
   import { enable, disable } from '@tauri-apps/plugin-autostart';
 
   let { settings = $bindable() }: { settings: UserSettings } = $props();
@@ -22,53 +23,73 @@
       await disable();
     }
   }
+
+  async function handleLanguageChange() {
+    await save();
+    if (settings.language === 'system') {
+      const nav = navigator.language;
+      const mapped = mapToSupported(nav);
+      locale.set(mapped);
+    } else {
+      locale.set(settings.language);
+    }
+    await updateTrayLanguage(settings.language);
+  }
+
+  function mapToSupported(nav: string): string {
+    if (nav.startsWith('ko')) return 'ko';
+    if (nav.startsWith('ja')) return 'ja';
+    if (nav === 'zh-TW' || nav === 'zh-Hant') return 'zh-Hant';
+    if (nav.startsWith('zh')) return 'zh-Hans';
+    return 'en';
+  }
 </script>
 
 <div class="general-tab">
   <!-- 표시 설정 -->
   <section class="settings-group">
-    <h3>표시 설정</h3>
+    <h3>{$t('settings.general.display')}</h3>
     <div class="setting-row">
-      <label for="displayMode">표시 모드</label>
+      <label for="displayMode">{$t('settings.general.displayMode')}</label>
       <select id="displayMode" bind:value={settings.displayMode} onchange={save}>
-        <option value="percentOnly">퍼센트만</option>
-        <option value="iconOnly">아이콘만</option>
-        <option value="iconAndPercent">아이콘 + 퍼센트</option>
+        <option value="percentOnly">{$t('settings.general.percentOnly')}</option>
+        <option value="iconOnly">{$t('settings.general.iconOnly')}</option>
+        <option value="iconAndPercent">{$t('settings.general.iconAndPercent')}</option>
       </select>
     </div>
     <div class="setting-row">
-      <label for="iconTheme">아이콘 테마</label>
+      <label for="iconTheme">{$t('settings.general.iconTheme')}</label>
       <select id="iconTheme" bind:value={settings.iconTheme} onchange={save}>
-        <option value="colorTranslucent">컬러 투명</option>
-        <option value="colorWithBackground">컬러 배경</option>
-        <option value="monochrome">모노크롬</option>
+        <option value="colorTranslucent">{$t('settings.general.colorTranslucent')}</option>
+        <option value="colorWithBackground">{$t('settings.general.colorWithBackground')}</option>
+        <option value="monochrome">{$t('settings.general.monochrome')}</option>
       </select>
     </div>
     <div class="setting-row">
-      <label for="displayContent">표시 내용</label>
+      <label for="displayContent">{$t('settings.general.displayContent')}</label>
       <select id="displayContent" bind:value={settings.displayContent} onchange={save}>
-        <option value="smart">스마트 (자동)</option>
-        <option value="custom">커스텀</option>
+        <option value="smart">{$t('settings.general.smart')}</option>
+        <option value="custom">{$t('settings.general.custom')}</option>
       </select>
     </div>
   </section>
 
   <!-- 새로고침 -->
   <section class="settings-group">
-    <h3>새로고침</h3>
+    <h3>{$t('settings.general.refresh')}</h3>
     <div class="setting-row">
-      <label for="refreshMode">새로고침 모드</label>
+      <label for="refreshMode">{$t('settings.general.refreshMode')}</label>
       <select id="refreshMode" bind:value={settings.refreshMode} onchange={save}>
-        <option value="smart">스마트 모니터링</option>
-        <option value="fixed">고정 간격</option>
+        <option value="smart">{$t('settings.general.smartMonitoring')}</option>
+        <option value="fixed">{$t('settings.general.fixedInterval')}</option>
       </select>
     </div>
     {#if settings.refreshMode === 'fixed'}
       <div class="setting-row">
-        <label for="refreshInterval">간격 (분)</label>
+        <label for="refreshInterval">{$t('settings.general.interval')}</label>
         <select id="refreshInterval" bind:value={settings.refreshIntervalMinutes} onchange={save}>
           {#each [1, 2, 3, 5, 10, 15, 20, 30] as min}
-            <option value={min}>{min}분</option>
+            <option value={min}>{$t('settings.general.minutes', { values: { min } })}</option>
           {/each}
         </select>
       </div>
@@ -77,26 +98,27 @@
 
   <!-- 외관 -->
   <section class="settings-group">
-    <h3>외관</h3>
+    <h3>{$t('settings.general.appearance')}</h3>
     <div class="setting-row">
-      <label for="theme">테마</label>
+      <label for="theme">{$t('settings.general.theme')}</label>
       <select id="theme" bind:value={settings.theme} onchange={save}>
-        <option value="system">시스템</option>
-        <option value="light">밝음</option>
-        <option value="dark">어두움</option>
+        <option value="system">{$t('settings.general.themeSystem')}</option>
+        <option value="light">{$t('settings.general.themeLight')}</option>
+        <option value="dark">{$t('settings.general.themeDark')}</option>
       </select>
     </div>
     <div class="setting-row">
-      <label for="timeFormat">시간 형식</label>
+      <label for="timeFormat">{$t('settings.general.timeFormat')}</label>
       <select id="timeFormat" bind:value={settings.timeFormat} onchange={save}>
-        <option value="system">시스템</option>
-        <option value="twelveHour">12시간</option>
-        <option value="twentyFourHour">24시간</option>
+        <option value="system">{$t('settings.general.timeSystem')}</option>
+        <option value="twelveHour">{$t('settings.general.time12h')}</option>
+        <option value="twentyFourHour">{$t('settings.general.time24h')}</option>
       </select>
     </div>
     <div class="setting-row">
-      <label for="language">언어</label>
-      <select id="language" bind:value={settings.language} onchange={save}>
+      <label for="language">{$t('settings.general.language')}</label>
+      <select id="language" bind:value={settings.language} onchange={handleLanguageChange}>
+        <option value="system">{$t('settings.general.system')}</option>
         <option value="en">English</option>
         <option value="ko">한국어</option>
         <option value="ja">日本語</option>
@@ -108,23 +130,23 @@
 
   <!-- 시스템 -->
   <section class="settings-group">
-    <h3>시스템</h3>
+    <h3>{$t('settings.general.system')}</h3>
     <div class="setting-row checkbox">
       <label>
         <input type="checkbox" bind:checked={settings.launchAtLogin} onchange={handleLaunchAtLogin} />
-        Windows 시작 시 자동 실행
+        {$t('settings.general.autostart')}
       </label>
     </div>
     <div class="setting-row checkbox">
       <label>
         <input type="checkbox" bind:checked={settings.notificationsEnabled} onchange={save} />
-        사용량 경고 알림
+        {$t('settings.general.notifications')}
       </label>
     </div>
     <div class="setting-row checkbox">
       <label>
         <input type="checkbox" bind:checked={settings.resetNotifications} onchange={save} />
-        리셋 알림
+        {$t('settings.general.resetNotifications')}
       </label>
     </div>
   </section>
