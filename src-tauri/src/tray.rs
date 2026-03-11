@@ -1,7 +1,7 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Runtime,
+    Manager, Runtime,
 };
 
 pub fn create_tray<R: Runtime>(
@@ -18,6 +18,8 @@ pub fn create_tray<R: Runtime>(
         .icon(app.default_window_icon().cloned().unwrap())
         .on_menu_event(|app, event| match event.id.as_ref() {
             "quit" => {
+                let state = app.state::<crate::AppState>();
+                state.cancel_token.cancel();
                 app.exit(0);
             }
             "settings" => {
