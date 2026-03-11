@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Usage4Claude",
+    "title": "Usage4Claude for Windows"
+  },
+  "popup": {
+    "refresh": "새로고침",
+    "close": "닫기",
+    "loading": "데이터 로딩 중...",
+    "noData": "데이터 없음"
+  },
+  "settings": {
+    "tabs": {
+      "general": "일반",
+      "auth": "인증",
+      "about": "정보"
+    },
+    "general": {
+      "display": "표시 설정",
+      "displayMode": "표시 모드",
+      "percentOnly": "퍼센트만",
+      "iconOnly": "아이콘만",
+      "iconAndPercent": "아이콘 + 퍼센트",
+      "iconTheme": "아이콘 테마",
+      "colorTranslucent": "컬러 투명",
+      "colorWithBackground": "컬러 배경",
+      "monochrome": "모노크롬",
+      "displayContent": "표시 내용",
+      "smart": "스마트 (자동)",
+      "custom": "커스텀",
+      "refresh": "새로고침",
+      "refreshMode": "새로고침 모드",
+      "smartMonitoring": "스마트 모니터링",
+      "fixedInterval": "고정 간격",
+      "interval": "간격 (분)",
+      "minutes": "{min}분",
+      "appearance": "외관",
+      "theme": "테마",
+      "themeSystem": "시스템",
+      "themeLight": "밝음",
+      "themeDark": "어두움",
+      "timeFormat": "시간 형식",
+      "timeSystem": "시스템",
+      "time12h": "12시간",
+      "time24h": "24시간",
+      "language": "언어",
+      "system": "시스템",
+      "autostart": "Windows 시작 시 자동 실행",
+      "notifications": "사용량 경고 알림",
+      "resetNotifications": "리셋 알림"
+    },
+    "auth": {
+      "accounts": "계정 목록",
+      "noAccounts": "등록된 계정이 없습니다.",
+      "switchTo": "이 계정으로 전환",
+      "activeAccount": "현재 활성 계정",
+      "diagnose": "진단",
+      "diagnosing": "진단 중...",
+      "delete": "삭제",
+      "deleteConfirm": "\"{name}\" 계정을 삭제하시겠습니까?",
+      "sessionKey": "세션키",
+      "sessionKeyPlaceholder": "sessionKey 값 입력",
+      "verify": "확인",
+      "verifying": "확인 중...",
+      "addAccount": "계정 추가",
+      "browserLogin": "브라우저 로그인",
+      "loggingIn": "로그인 중...",
+      "orgSelect": "조직 선택",
+      "displayName": "표시 이름",
+      "add": "추가",
+      "adding": "추가 중...",
+      "cancel": "취소",
+      "show": "표시",
+      "hide": "숨기기",
+      "diagSession": "세션키",
+      "diagApi": "API 연결",
+      "diagOrgs": "조직",
+      "valid": "유효",
+      "invalid": "유효하지 않음",
+      "connected": "정상",
+      "failed": "실패",
+      "openingLogin": "로그인 창을 여는 중...",
+      "pleaseLogin": "로그인을 완료해주세요...",
+      "extracting": "세션키 추출 완료. 조직 정보 조회 중...",
+      "registering": "계정 등록 중...",
+      "selectOrg": "조직을 선택해주세요.",
+      "confirm": "확인",
+      "noOrgsFound": "조직을 찾을 수 없습니다."
+    },
+    "about": {
+      "version": "버전 {version}",
+      "links": "링크",
+      "github": "GitHub 저장소",
+      "originalProject": "원본 macOS 프로젝트",
+      "kofi": "Ko-fi 후원",
+      "sponsors": "GitHub Sponsors",
+      "credits": "크레딧",
+      "originalAuthor": "원본 macOS 앱 제작",
+      "windowsPort": "Windows 포팅",
+      "license": "라이선스"
+    }
+  },
+  "tray": {
+    "refresh": "새로고침",
+    "accounts": "계정",
+    "addAccount": "계정 추가...",
+    "settings": "설정...",
+    "quit": "종료"
+  },
+  "usage": {
+    "fiveHour": "5시간",
+    "sevenDay": "7일",
+    "opus": "Opus",
+    "sonnet": "Sonnet",
+    "extra": "Extra"
+  },
+  "countdown": {
+    "reset": "리셋!",
+    "clickToToggle": "클릭하여 전환"
+  }
+}

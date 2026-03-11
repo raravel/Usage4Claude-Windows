@@ -9,8 +9,9 @@ use crate::services::keyring_store::KeyringService;
 
 pub fn create_tray(
     app: &AppHandle,
+    language: &str,
 ) -> tauri::Result<tauri::tray::TrayIcon> {
-    let menu = build_menu(app)?;
+    let menu = build_menu_with_lang(app, language)?;
 
     TrayIconBuilder::new()
         .menu(&menu)
@@ -33,7 +34,7 @@ pub fn create_tray(
                         "settings",
                         tauri::WebviewUrl::App("/settings".into()),
                     )
-                    .title("설정")
+                    .title("Settings")
                     .inner_size(500.0, 600.0)
                     .resizable(false)
                     .center()
@@ -80,8 +81,66 @@ pub fn create_tray(
         .build(app)
 }
 
-/// 메뉴를 새로 빌드한다
+/// Returns a localised tray label for the given key and language code.
+fn get_tray_label(key: &str, language: &str) -> &'static str {
+    match (key, language) {
+        ("refresh", "ko") => "새로고침",
+        ("refresh", "ja") => "更新",
+        ("refresh", "zh-Hans") => "刷新",
+        ("refresh", "zh-Hant") => "重新整理",
+        ("refresh", _) => "Refresh",
+
+        ("accounts", "ko") => "계정",
+        ("accounts", "ja") => "アカウント",
+        ("accounts", "zh-Hans") => "账户",
+        ("accounts", "zh-Hant") => "帳戶",
+        ("accounts", _) => "Accounts",
+
+        ("addAccount", "ko") => "계정 추가...",
+        ("addAccount", "ja") => "アカウント追加...",
+        ("addAccount", "zh-Hans") => "添加账户...",
+        ("addAccount", "zh-Hant") => "新增帳戶...",
+        ("addAccount", _) => "Add Account...",
+
+        ("settings", "ko") => "설정...",
+        ("settings", "ja") => "設定...",
+        ("settings", "zh-Hans") => "设置...",
+        ("settings", "zh-Hant") => "設定...",
+        ("settings", _) => "Settings...",
+
+        ("quit", "ko") => "종료",
+        ("quit", "ja") => "終了",
+        ("quit", "zh-Hans") => "退出",
+        ("quit", "zh-Hant") => "結束",
+        ("quit", _) => "Quit",
+
+        (_, _) => "???",
+    }
+}
+
+/// Resolves "system" language to English for tray labels (tray is OS-native, no navigator).
+fn resolve_lang(language: &str) -> &str {
+    if language == "system" {
+        "en"
+    } else {
+        language
+    }
+}
+
+/// 메뉴를 현재 AppState에서 언어를 읽어 빌드한다 (AppState가 이미 manage된 이후에만 사용)
 fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
+    let lang_owned = {
+        let state = app.state::<crate::AppState>();
+        let settings = state.settings.lock().unwrap();
+        settings.language.clone()
+    };
+    build_menu_with_lang(app, &lang_owned)
+}
+
+/// 메뉴를 지정된 언어로 빌드한다
+fn build_menu_with_lang(app: &AppHandle, language: &str) -> tauri::Result<Menu<tauri::Wry>> {
+    let lang = resolve_lang(language);
+
     let accounts = KeyringService::load_accounts().unwrap_or_default();
     let active_account = accounts.iter().find(|a| a.is_active);
 
@@ -96,22 +155,22 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let sep1 = PredefinedMenuItem::separator(app)?;
 
     // 새로고침
-    let refresh_i = MenuItem::with_id(app, "refresh", "새로고침", true, None::<&str>)?;
+    let refresh_i = MenuItem::with_id(app, "refresh", get_tray_label("refresh", lang), true, None::<&str>)?;
 
     let sep2 = PredefinedMenuItem::separator(app)?;
 
     // 계정 서브메뉴
-    let accounts_submenu = build_accounts_submenu(app, &accounts)?;
+    let accounts_submenu = build_accounts_submenu(app, &accounts, lang)?;
 
     let sep3 = PredefinedMenuItem::separator(app)?;
 
     // 설정
-    let settings_i = MenuItem::with_id(app, "settings", "설정...", true, None::<&str>)?;
+    let settings_i = MenuItem::with_id(app, "settings", get_tray_label("settings", lang), true, None::<&str>)?;
 
     let sep4 = PredefinedMenuItem::separator(app)?;
 
     // 종료
-    let quit_i = MenuItem::with_id(app, "quit", "종료", true, None::<&str>)?;
+    let quit_i = MenuItem::with_id(app, "quit", get_tray_label("quit", lang), true, None::<&str>)?;
 
     Menu::with_items(
         app,
@@ -133,6 +192,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
 fn build_accounts_submenu(
     app: &AppHandle,
     accounts: &[crate::models::account::Account],
+    lang: &str,
 ) -> tauri::Result<Submenu<tauri::Wry>> {
     let mut items: Vec<Box<dyn tauri::menu::IsMenuItem<tauri::Wry>>> = Vec::new();
 
@@ -157,13 +217,13 @@ fn build_accounts_submenu(
 
     // 계정 추가 항목
     let add_account_i =
-        MenuItem::with_id(app, "add-account", "계정 추가...", true, None::<&str>)?;
+        MenuItem::with_id(app, "add-account", get_tray_label("addAccount", lang), true, None::<&str>)?;
     items.push(Box::new(add_account_i));
 
     let item_refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> =
         items.iter().map(|b| b.as_ref()).collect();
 
-    Submenu::with_items(app, "계정", true, &item_refs)
+    Submenu::with_items(app, get_tray_label("accounts", lang), true, &item_refs)
 }
 
 /// 계정을 전환한다

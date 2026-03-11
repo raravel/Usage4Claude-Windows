@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { t } from 'svelte-i18n';
   import { getAppVersion } from '$lib/api';
   import { open } from '@tauri-apps/plugin-shell';
 
@@ -22,17 +23,17 @@
          완료 조건을 만족하는 최소 구현으로 볼 수 있으나, 실제 앱 아이콘 이미지를 사용하는 것이 더 바람직함.
          향후 개선 권고: <img src="/icons/icon.png" alt="App icon" /> 형태로 교체 고려. -->
     <div class="app-icon">U4C</div>
-    <div class="app-title">Usage4Claude for Windows</div>
+    <div class="app-title">{$t('app.title')}</div>
     <!-- REVIEW: PASS — 버전은 get_app_version 커맨드(env!("CARGO_PKG_VERSION"))를 통해 Cargo.toml에서 읽어옴. -->
-    <div class="app-version">버전 {version}</div>
+    <div class="app-version">{$t('settings.about.version', { values: { version } })}</div>
   </section>
 
   <!-- External Links -->
   <section class="settings-group">
-    <h3>링크</h3>
+    <h3>{$t('settings.about.links')}</h3>
     <!-- REVIEW: PASS — GitHub, Ko-fi, GitHub Sponsors 링크 모두 @tauri-apps/plugin-shell의 open()으로 구현됨. -->
     <div class="link-row">
-      <span class="link-label">GitHub 저장소</span>
+      <span class="link-label">{$t('settings.about.github')}</span>
       <button
         class="link-button"
         onclick={() => openLink('https://github.com/raravel/Usage4Claude-Windows')}
@@ -41,7 +42,7 @@
       </button>
     </div>
     <div class="link-row">
-      <span class="link-label">원본 macOS 프로젝트</span>
+      <span class="link-label">{$t('settings.about.originalProject')}</span>
       <button
         class="link-button"
         onclick={() => openLink('https://github.com/f-is-h/Usage4Claude')}
@@ -50,7 +51,7 @@
       </button>
     </div>
     <div class="link-row">
-      <span class="link-label">Ko-fi 후원</span>
+      <span class="link-label">{$t('settings.about.kofi')}</span>
       <button
         class="link-button"
         onclick={() => openLink('https://ko-fi.com/raravel')}
@@ -59,7 +60,7 @@
       </button>
     </div>
     <div class="link-row">
-      <span class="link-label">GitHub Sponsors</span>
+      <span class="link-label">{$t('settings.about.sponsors')}</span>
       <button
         class="link-button"
         onclick={() => openLink('https://github.com/sponsors/raravel')}
@@ -72,9 +73,9 @@
   <!-- REVIEW: PASS — 크레딧 섹션에 원본 macOS 프로젝트(f-is-h) 크레딧과 MIT License 표기 포함됨. -->
   <!-- Credits -->
   <section class="settings-group">
-    <h3>크레딧</h3>
+    <h3>{$t('settings.about.credits')}</h3>
     <div class="credit-row">
-      <span class="credit-text">원본 macOS 앱 제작</span>
+      <span class="credit-text">{$t('settings.about.originalAuthor')}</span>
       <button
         class="link-button"
         onclick={() => openLink('https://github.com/f-is-h/Usage4Claude')}
@@ -83,11 +84,11 @@
       </button>
     </div>
     <div class="credit-row">
-      <span class="credit-text">Windows 포팅</span>
+      <span class="credit-text">{$t('settings.about.windowsPort')}</span>
       <span class="credit-value">raravel</span>
     </div>
     <div class="credit-row">
-      <span class="credit-text">라이선스</span>
+      <span class="credit-text">{$t('settings.about.license')}</span>
       <span class="credit-value">MIT License</span>
     </div>
   </section>

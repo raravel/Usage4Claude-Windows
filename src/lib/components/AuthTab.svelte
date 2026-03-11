@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { t } from 'svelte-i18n';
   import type { Account, Organization, DiagnosisResult } from '$lib/types';
   import {
     getAccounts,
@@ -73,7 +74,7 @@
 
   async function handleRemove(account: Account) {
     const confirmed = window.confirm(
-      `"${account.displayName}" 계정을 삭제하시겠습니까?`
+      $t('settings.auth.deleteConfirm', { values: { name: account.displayName } })
     );
     if (!confirmed) return;
     try {
@@ -110,7 +111,7 @@
 
   async function handleFetchOrgs() {
     if (!formSessionKey.trim()) {
-      formError = '세션키를 입력하세요.';
+      formError = $t('settings.auth.sessionKeyPlaceholder');
       return;
     }
     formLoading = true;
@@ -118,7 +119,7 @@
     try {
       formOrgs = await fetchOrganizations(formSessionKey.trim());
       if (formOrgs.length === 0) {
-        formError = '조직을 찾을 수 없습니다.';
+        formError = $t('settings.auth.noOrgsFound');
         return;
       }
       formSelectedOrgId = formOrgs[0].uuid;
@@ -140,12 +141,12 @@
 
   async function handleAddAccount() {
     if (!formSelectedOrgId || !formDisplayName.trim()) {
-      formError = '조직과 표시 이름을 확인하세요.';
+      formError = $t('settings.auth.selectOrg');
       return;
     }
     const org = formOrgs.find((o) => o.uuid === formSelectedOrgId);
     if (!org) {
-      formError = '선택된 조직을 찾을 수 없습니다.';
+      formError = $t('settings.auth.noOrgsFound');
       return;
     }
     formLoading = true;
@@ -180,9 +181,9 @@
     formError = null;
     try {
       browserLoginActive = true;
-      browserLoginStatus = '로그인 창을 여는 중...';
+      browserLoginStatus = $t('settings.auth.openingLogin');
       await openLoginWindow();
-      browserLoginStatus = '로그인을 완료해주세요...';
+      browserLoginStatus = $t('settings.auth.pleaseLogin');
       startLoginPolling();
     } catch (e) {
       formError = String(e);
@@ -199,7 +200,7 @@
         const sessionKey = await getLoginResult();
         if (sessionKey) {
           stopLoginPolling();
-          browserLoginStatus = '세션키 추출 완료. 조직 정보 조회 중...';
+          browserLoginStatus = $t('settings.auth.extracting');
           await handleLoginSuccess(sessionKey);
         }
       } catch {
@@ -220,7 +221,7 @@
       const orgs = await fetchOrganizations(sessionKey);
 
       if (orgs.length === 0) {
-        formError = '조직을 찾을 수 없습니다.';
+        formError = $t('settings.auth.noOrgsFound');
         browserLoginActive = false;
         browserLoginStatus = '';
         await closeLoginWindow();
@@ -229,7 +230,7 @@
 
       if (orgs.length === 1) {
         // 조직이 1개면 자동 등록
-        browserLoginStatus = '계정 등록 중...';
+        browserLoginStatus = $t('settings.auth.registering');
         await addAccount(sessionKey, orgs[0].uuid, orgs[0].name, orgs[0].name);
         await closeLoginWindow();
         browserLoginActive = false;
@@ -242,7 +243,7 @@
         browserLoginSelectedOrgId = orgs[0].uuid;
         browserLoginDisplayName = orgs[0].name;
         showBrowserOrgSelect = true;
-        browserLoginStatus = '조직을 선택해주세요.';
+        browserLoginStatus = $t('settings.auth.selectOrg');
       }
     } catch (e) {
       formError = String(e);
@@ -294,14 +295,14 @@
 <div class="auth-tab">
   <!-- 계정 목록 -->
   <section class="settings-group">
-    <h3>계정 목록</h3>
+    <h3>{$t('settings.auth.accounts')}</h3>
 
     {#if loading}
-      <div class="status-text">불러오는 중...</div>
+      <div class="status-text">{$t('popup.loading')}</div>
     {:else if error}
       <div class="error-text">{error}</div>
     {:else if accounts.length === 0}
-      <div class="status-text">등록된 계정이 없습니다.</div>
+      <div class="status-text">{$t('settings.auth.noAccounts')}</div>
     {:else}
       <ul class="account-list">
         {#each accounts as account (account.id)}
@@ -309,7 +310,7 @@
             <button
               class="account-select-btn"
               onclick={() => handleSwitch(account.id)}
-              title={account.isActive ? '현재 활성 계정' : '이 계정으로 전환'}
+              title={account.isActive ? $t('settings.auth.activeAccount') : $t('settings.auth.switchTo')}
             >
               <span class="account-check">{account.isActive ? '✓' : ''}</span>
               <span class="account-info">
@@ -323,16 +324,16 @@
                 class="diag-btn"
                 onclick={() => handleDiagnose(account.id)}
                 disabled={diagLoading[account.id]}
-                title="연결 진단"
+                title={$t('settings.auth.diagnose')}
               >
-                {diagLoading[account.id] ? '진단 중...' : '진단'}
+                {diagLoading[account.id] ? $t('settings.auth.diagnosing') : $t('settings.auth.diagnose')}
               </button>
               <button
                 class="delete-btn"
                 onclick={() => handleRemove(account)}
-                title="계정 삭제"
+                title={$t('settings.auth.delete')}
               >
-                삭제
+                {$t('settings.auth.delete')}
               </button>
             </div>
           </li>
@@ -341,20 +342,20 @@
             {@const diag = diagResults[account.id]!}
             <li class="diag-result">
               <div class="diag-row">
-                <span class="diag-label">세션키</span>
+                <span class="diag-label">{$t('settings.auth.diagSession')}</span>
                 <span class:ok={diag.sessionValid} class:fail={!diag.sessionValid}>
-                  {diag.sessionValid ? '유효' : '유효하지 않음'}
+                  {diag.sessionValid ? $t('settings.auth.valid') : $t('settings.auth.invalid')}
                 </span>
               </div>
               <div class="diag-row">
-                <span class="diag-label">API 연결</span>
+                <span class="diag-label">{$t('settings.auth.diagApi')}</span>
                 <span class:ok={diag.apiReachable} class:fail={!diag.apiReachable}>
-                  {diag.apiReachable ? '정상' : '실패'}
+                  {diag.apiReachable ? $t('settings.auth.connected') : $t('settings.auth.failed')}
                 </span>
               </div>
               {#if diag.organizations.length > 0}
                 <div class="diag-row">
-                  <span class="diag-label">조직</span>
+                  <span class="diag-label">{$t('settings.auth.diagOrgs')}</span>
                   <span class="diag-orgs">{diag.organizations.map((o) => o.name).join(', ')}</span>
                 </div>
               {/if}
@@ -370,25 +371,25 @@
 
   <!-- 계정 추가 -->
   <section class="settings-group">
-    <h3>계정 추가</h3>
+    <h3>{$t('settings.auth.addAccount')}</h3>
 
     {#if formStep === 'input'}
       <div class="form-row">
-        <label for="sessionKey">세션키</label>
+        <label for="sessionKey">{$t('settings.auth.sessionKey')}</label>
         <div class="session-key-input">
           <input
             id="sessionKey"
             type={showSessionKey ? 'text' : 'password'}
             bind:value={formSessionKey}
-            placeholder="sessionKey 값 입력"
+            placeholder={$t('settings.auth.sessionKeyPlaceholder')}
             autocomplete="off"
           />
           <button
             class="toggle-visibility"
             onclick={() => (showSessionKey = !showSessionKey)}
-            title={showSessionKey ? '숨기기' : '표시'}
+            title={showSessionKey ? $t('settings.auth.hide') : $t('settings.auth.show')}
           >
-            {showSessionKey ? '숨기기' : '표시'}
+            {showSessionKey ? $t('settings.auth.hide') : $t('settings.auth.show')}
           </button>
         </div>
       </div>
@@ -399,14 +400,14 @@
 
       <div class="form-actions">
         <button class="primary-btn" onclick={handleFetchOrgs} disabled={formLoading}>
-          {formLoading ? '확인 중...' : '확인'}
+          {formLoading ? $t('settings.auth.verifying') : $t('settings.auth.verify')}
         </button>
         <button
           class="secondary-btn"
           onclick={handleBrowserLogin}
           disabled={browserLoginActive}
         >
-          {browserLoginActive ? '로그인 중...' : '브라우저 로그인'}
+          {browserLoginActive ? $t('settings.auth.loggingIn') : $t('settings.auth.browserLogin')}
         </button>
       </div>
 
@@ -420,7 +421,7 @@
       {#if showBrowserOrgSelect}
         <div class="browser-org-select">
           <div class="form-row">
-            <label for="browserOrgSelect">조직 선택</label>
+            <label for="browserOrgSelect">{$t('settings.auth.orgSelect')}</label>
             <select
               id="browserOrgSelect"
               bind:value={browserLoginSelectedOrgId}
@@ -432,7 +433,7 @@
             </select>
           </div>
           <div class="form-row">
-            <label for="browserDisplayName">표시 이름</label>
+            <label for="browserDisplayName">{$t('settings.auth.displayName')}</label>
             <input
               id="browserDisplayName"
               type="text"
@@ -440,15 +441,15 @@
             />
           </div>
           <div class="form-actions">
-            <button class="primary-btn" onclick={handleBrowserOrgConfirm}>확인</button>
-            <button class="secondary-btn" onclick={handleBrowserOrgCancel}>취소</button>
+            <button class="primary-btn" onclick={handleBrowserOrgConfirm}>{$t('settings.auth.confirm')}</button>
+            <button class="secondary-btn" onclick={handleBrowserOrgCancel}>{$t('settings.auth.cancel')}</button>
           </div>
         </div>
       {/if}
     {:else}
       <!-- 조직 선택 단계 (수동 입력) -->
       <div class="form-row">
-        <label for="orgSelect">조직 선택</label>
+        <label for="orgSelect">{$t('settings.auth.orgSelect')}</label>
         {#if formOrgs.length === 1}
           <span class="org-name-only">{formOrgs[0].name}</span>
         {:else}
@@ -461,8 +462,8 @@
       </div>
 
       <div class="form-row">
-        <label for="displayName">표시 이름</label>
-        <input id="displayName" type="text" bind:value={formDisplayName} placeholder="표시 이름" />
+        <label for="displayName">{$t('settings.auth.displayName')}</label>
+        <input id="displayName" type="text" bind:value={formDisplayName} placeholder={$t('settings.auth.displayName')} />
       </div>
 
       {#if formError}
@@ -471,9 +472,9 @@
 
       <div class="form-actions">
         <button class="primary-btn" onclick={handleAddAccount} disabled={formLoading}>
-          {formLoading ? '추가 중...' : '추가'}
+          {formLoading ? $t('settings.auth.adding') : $t('settings.auth.add')}
         </button>
-        <button class="secondary-btn" onclick={handleFormReset}>취소</button>
+        <button class="secondary-btn" onclick={handleFormReset}>{$t('settings.auth.cancel')}</button>
       </div>
     {/if}
   </section>

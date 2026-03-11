@@ -20,3 +20,19 @@ pub fn update_settings(
     *current = settings;
     Ok(())
 }
+
+#[tauri::command]
+pub fn update_tray_language(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    language: String,
+) -> Result<(), String> {
+    // Update language in state
+    {
+        let mut settings = state.settings.lock().map_err(|e| e.to_string())?;
+        settings.language = language;
+        SettingsService::save(&app, &settings)?;
+    }
+    // Rebuild tray menu with new language
+    crate::tray::rebuild_tray_menu(&app).map_err(|e| e.to_string())
+}
