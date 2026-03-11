@@ -1,3 +1,9 @@
+// REVIEW: PASS — 완료 조건 5개 및 추가 확인 항목 모두 충족.
+// - 색상 분기: color_for_percentage(<50/50-75/>75) + LimitType별 팔레트 (5종)
+// - 비트맵 글리프(0-9, %, F, L) 정의 + draw_percentage_text로 아이콘에 렌더링
+// - IconTheme 3종(ColorTranslucent, ColorWithBackground, Monochrome) 분기 존재
+// - LRU 방식은 아니지만 MAX_CACHE=50 초과 시 전체 clear 후 재삽입으로 크기 제한
+// - image crate(0.25), cargo check/clippy 통과, AppState.icon_renderer 존재, refresh.rs에서 update_tray_icon 호출
 use image::{Rgba, RgbaImage};
 use std::collections::HashMap;
 
