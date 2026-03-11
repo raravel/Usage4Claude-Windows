@@ -56,6 +56,8 @@ pub async fn add_account(
     accounts.push(account.clone());
     KeyringService::store_accounts(&accounts)?;
 
+    tracing::info!("Account added: {}", account.display_name);
+
     // 트레이 메뉴 재구성
     let _ = crate::tray::rebuild_tray_menu(&app);
 
@@ -94,6 +96,8 @@ pub fn remove_account(
 
     KeyringService::store_accounts(&accounts)?;
 
+    tracing::info!("Account removed: {}", account_id);
+
     // 트레이 메뉴 재구성
     let _ = crate::tray::rebuild_tray_menu(&app);
 
@@ -121,6 +125,8 @@ pub async fn switch_account(
     }
 
     KeyringService::store_accounts(&accounts)?;
+
+    tracing::info!("Switched to account: {}", account_id);
 
     // 트레이 메뉴 재구성
     let _ = crate::tray::rebuild_tray_menu(&app);

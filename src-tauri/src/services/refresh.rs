@@ -35,6 +35,7 @@ pub fn start_refresh_service(
 
 /// 새로고침 실행 후 다음 폴링 간격을 반환
 async fn do_refresh_with_monitor(app: &AppHandle, monitor: &mut SmartMonitor) -> Duration {
+    tracing::debug!("Starting refresh cycle");
     let state = app.state::<AppState>();
 
     // 설정에서 RefreshMode 및 고정 간격 읽기
@@ -71,6 +72,7 @@ async fn do_refresh_with_monitor(app: &AppHandle, monitor: &mut SmartMonitor) ->
     // 3. API 호출
     match state.api_service.fetch_all_usage(&active_account.org_id, &session_key).await {
         Ok(data) => {
+            tracing::info!("Usage data refreshed successfully");
             // 성공: 에러 카운트 리셋
             if let Ok(mut count) = state.consecutive_errors.lock() {
                 *count = 0;
@@ -110,6 +112,7 @@ async fn do_refresh_with_monitor(app: &AppHandle, monitor: &mut SmartMonitor) ->
             }
         }
         Err(e) => {
+            tracing::warn!("Refresh failed: {}", e);
             // 실패: 에러 카운트 증가
             if let Ok(mut count) = state.consecutive_errors.lock() {
                 *count += 1;
@@ -216,6 +219,7 @@ fn check_and_send_notifications(app: &AppHandle, data: &UsageData) {
     let notifications = tracker.check(data, &settings);
 
     for notif in notifications {
+        tracing::info!("Sending notification: {}", notif.title);
         let _ = app.notification()
             .builder()
             .title(&notif.title)
