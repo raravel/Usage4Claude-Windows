@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from 'svelte-i18n';
   import CircularProgress from './CircularProgress.svelte';
   import CountdownTimer from './CountdownTimer.svelte';
   import type { UsageLimitInfo } from '$lib/types';
@@ -15,12 +16,12 @@
     sonnet: ['#64B5F6', '#1976D2', '#283593'],
   };
 
-  const labelMap: Record<string, string> = {
-    fiveHour: '5-Hour',
-    sevenDay: '7-Day',
-    opus: 'Opus',
-    sonnet: 'Sonnet',
-    extra: 'Extra',
+  const labelKeyMap: Record<string, string> = {
+    fiveHour: 'usage.fiveHour',
+    sevenDay: 'usage.sevenDay',
+    opus: 'usage.opus',
+    sonnet: 'usage.sonnet',
+    extra: 'usage.extra',
   };
 
   const pct = $derived(limit.percentage * 100);
@@ -30,13 +31,17 @@
     if (pct < 75) return colors[1];
     return colors[2];
   });
+
+  const label = $derived(
+    labelKeyMap[limit.limitType] ? $t(labelKeyMap[limit.limitType]) : limit.limitType
+  );
 </script>
 
 <div class="usage-row">
   <CircularProgress
     percentage={pct}
     {color}
-    label={labelMap[limit.limitType] || limit.limitType}
+    {label}
   />
   <CountdownTimer
     resetsAt={limit.resetsAt}

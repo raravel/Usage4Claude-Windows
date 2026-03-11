@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { t } from 'svelte-i18n';
   import { getSettings } from '$lib/api';
   import type { UserSettings } from '$lib/types';
   import GeneralTab from '$lib/components/GeneralTab.svelte';
@@ -17,13 +18,13 @@
 <div class="settings-window">
   <div class="tab-bar">
     <button class:active={activeTab === 'general'} onclick={() => (activeTab = 'general')}>
-      일반
+      {$t('settings.tabs.general')}
     </button>
     <button class:active={activeTab === 'auth'} onclick={() => (activeTab = 'auth')}>
-      인증
+      {$t('settings.tabs.auth')}
     </button>
     <button class:active={activeTab === 'about'} onclick={() => (activeTab = 'about')}>
-      정보
+      {$t('settings.tabs.about')}
     </button>
   </div>
 
@@ -31,7 +32,7 @@
     {#if activeTab === 'general' && settings}
       <GeneralTab bind:settings={settings} />
     {:else if activeTab === 'general'}
-      <div class="tab-panel">설정을 불러오는 중...</div>
+      <div class="tab-panel">{$t('popup.loading')}</div>
     {:else if activeTab === 'auth'}
       <AuthTab />
     {:else if activeTab === 'about'}

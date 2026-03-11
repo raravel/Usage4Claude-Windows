@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { t } from 'svelte-i18n';
   import { usageStore } from '$lib/state/usage.svelte';
   import { manualRefresh } from '$lib/api';
   import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -36,10 +37,10 @@
 
 <div class="popup-container">
   <header class="popup-header">
-    <h1>Usage4Claude</h1>
+    <h1>{$t('app.name')}</h1>
     <div class="header-actions">
-      <button onclick={handleRefresh} disabled={refreshing} title="새로고침">&#8635;</button>
-      <button onclick={handleClose} title="닫기">&times;</button>
+      <button onclick={handleRefresh} disabled={refreshing} title={$t('popup.refresh')}>&#8635;</button>
+      <button onclick={handleClose} title={$t('popup.close')}>&times;</button>
     </div>
   </header>
 
@@ -56,7 +57,7 @@
     {:else if usageStore.error}
       <div class="error-message">{usageStore.error}</div>
     {:else}
-      <div class="no-data">데이터 로딩 중...</div>
+      <div class="no-data">{$t('popup.loading')}</div>
     {/if}
   </main>
 </div>

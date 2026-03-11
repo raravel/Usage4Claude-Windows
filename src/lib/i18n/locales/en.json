@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Usage4Claude",
+    "title": "Usage4Claude for Windows"
+  },
+  "popup": {
+    "refresh": "Refresh",
+    "close": "Close",
+    "loading": "Loading data...",
+    "noData": "No data available"
+  },
+  "settings": {
+    "tabs": {
+      "general": "General",
+      "auth": "Authentication",
+      "about": "About"
+    },
+    "general": {
+      "display": "Display",
+      "displayMode": "Display Mode",
+      "percentOnly": "Percent Only",
+      "iconOnly": "Icon Only",
+      "iconAndPercent": "Icon + Percent",
+      "iconTheme": "Icon Theme",
+      "colorTranslucent": "Color Translucent",
+      "colorWithBackground": "Color with Background",
+      "monochrome": "Monochrome",
+      "displayContent": "Display Content",
+      "smart": "Smart (Auto)",
+      "custom": "Custom",
+      "refresh": "Refresh",
+      "refreshMode": "Refresh Mode",
+      "smartMonitoring": "Smart Monitoring",
+      "fixedInterval": "Fixed Interval",
+      "interval": "Interval (min)",
+      "minutes": "{min} min",
+      "appearance": "Appearance",
+      "theme": "Theme",
+      "themeSystem": "System",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "timeFormat": "Time Format",
+      "timeSystem": "System",
+      "time12h": "12-hour",
+      "time24h": "24-hour",
+      "language": "Language",
+      "system": "System",
+      "autostart": "Launch at startup",
+      "notifications": "Usage warning notifications",
+      "resetNotifications": "Reset notifications"
+    },
+    "auth": {
+      "accounts": "Accounts",
+      "noAccounts": "No accounts registered.",
+      "switchTo": "Switch to this account",
+      "activeAccount": "Current active account",
+      "diagnose": "Diagnose",
+      "diagnosing": "Diagnosing...",
+      "delete": "Delete",
+      "deleteConfirm": "Delete account \"{name}\"?",
+      "sessionKey": "Session Key",
+      "sessionKeyPlaceholder": "Enter sessionKey value",
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "addAccount": "Add Account",
+      "browserLogin": "Browser Login",
+      "loggingIn": "Logging in...",
+      "orgSelect": "Select Organization",
+      "displayName": "Display Name",
+      "add": "Add",
+      "adding": "Adding...",
+      "cancel": "Cancel",
+      "show": "Show",
+      "hide": "Hide",
+      "diagSession": "Session Key",
+      "diagApi": "API Connection",
+      "diagOrgs": "Organizations",
+      "valid": "Valid",
+      "invalid": "Invalid",
+      "connected": "Connected",
+      "failed": "Failed",
+      "openingLogin": "Opening login window...",
+      "pleaseLogin": "Please complete login...",
+      "extracting": "Session key extracted. Fetching organizations...",
+      "registering": "Registering account...",
+      "selectOrg": "Please select an organization.",
+      "confirm": "Confirm",
+      "noOrgsFound": "No organizations found."
+    },
+    "about": {
+      "version": "Version {version}",
+      "links": "Links",
+      "github": "GitHub Repository",
+      "originalProject": "Original macOS Project",
+      "kofi": "Ko-fi Support",
+      "sponsors": "GitHub Sponsors",
+      "credits": "Credits",
+      "originalAuthor": "Original macOS app by",
+      "windowsPort": "Windows port by",
+      "license": "License"
+    }
+  },
+  "tray": {
+    "refresh": "Refresh",
+    "accounts": "Accounts",
+    "addAccount": "Add Account...",
+    "settings": "Settings...",
+    "quit": "Quit"
+  },
+  "usage": {
+    "fiveHour": "5-Hour",
+    "sevenDay": "7-Day",
+    "opus": "Opus",
+    "sonnet": "Sonnet",
+    "extra": "Extra"
+  },
+  "countdown": {
+    "reset": "Reset!",
+    "clickToToggle": "Click to toggle"
+  }
+}

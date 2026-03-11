@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Usage4Claude",
+    "title": "Usage4Claude for Windows"
+  },
+  "popup": {
+    "refresh": "更新",
+    "close": "閉じる",
+    "loading": "データ読み込み中...",
+    "noData": "データなし"
+  },
+  "settings": {
+    "tabs": {
+      "general": "一般",
+      "auth": "認証",
+      "about": "情報"
+    },
+    "general": {
+      "display": "表示設定",
+      "displayMode": "表示モード",
+      "percentOnly": "パーセントのみ",
+      "iconOnly": "アイコンのみ",
+      "iconAndPercent": "アイコン + パーセント",
+      "iconTheme": "アイコンテーマ",
+      "colorTranslucent": "カラー半透明",
+      "colorWithBackground": "カラー背景あり",
+      "monochrome": "モノクロ",
+      "displayContent": "表示内容",
+      "smart": "スマート（自動）",
+      "custom": "カスタム",
+      "refresh": "更新",
+      "refreshMode": "更新モード",
+      "smartMonitoring": "スマートモニタリング",
+      "fixedInterval": "固定間隔",
+      "interval": "間隔（分）",
+      "minutes": "{min}分",
+      "appearance": "外観",
+      "theme": "テーマ",
+      "themeSystem": "システム",
+      "themeLight": "ライト",
+      "themeDark": "ダーク",
+      "timeFormat": "時間形式",
+      "timeSystem": "システム",
+      "time12h": "12時間",
+      "time24h": "24時間",
+      "language": "言語",
+      "system": "システム",
+      "autostart": "Windows起動時に自動実行",
+      "notifications": "使用量警告通知",
+      "resetNotifications": "リセット通知"
+    },
+    "auth": {
+      "accounts": "アカウント一覧",
+      "noAccounts": "登録されているアカウントはありません。",
+      "switchTo": "このアカウントに切り替え",
+      "activeAccount": "現在のアクティブアカウント",
+      "diagnose": "診断",
+      "diagnosing": "診断中...",
+      "delete": "削除",
+      "deleteConfirm": "アカウント「{name}」を削除しますか？",
+      "sessionKey": "セッションキー",
+      "sessionKeyPlaceholder": "sessionKeyの値を入力",
+      "verify": "確認",
+      "verifying": "確認中...",
+      "addAccount": "アカウント追加",
+      "browserLogin": "ブラウザログイン",
+      "loggingIn": "ログイン中...",
+      "orgSelect": "組織選択",
+      "displayName": "表示名",
+      "add": "追加",
+      "adding": "追加中...",
+      "cancel": "キャンセル",
+      "show": "表示",
+      "hide": "非表示",
+      "diagSession": "セッションキー",
+      "diagApi": "API接続",
+      "diagOrgs": "組織",
+      "valid": "有効",
+      "invalid": "無効",
+      "connected": "接続済み",
+      "failed": "失敗",
+      "openingLogin": "ログインウィンドウを開いています...",
+      "pleaseLogin": "ログインを完了してください...",
+      "extracting": "セッションキー抽出完了。組織情報を取得中...",
+      "registering": "アカウントを登録中...",
+      "selectOrg": "組織を選択してください。",
+      "confirm": "確認",
+      "noOrgsFound": "組織が見つかりません。"
+    },
+    "about": {
+      "version": "バージョン {version}",
+      "links": "リンク",
+      "github": "GitHubリポジトリ",
+      "originalProject": "オリジナルmacOSプロジェクト",
+      "kofi": "Ko-fiサポート",
+      "sponsors": "GitHub Sponsors",
+      "credits": "クレジット",
+      "originalAuthor": "オリジナルmacOSアプリ制作",
+      "windowsPort": "Windowsポート制作",
+      "license": "ライセンス"
+    }
+  },
+  "tray": {
+    "refresh": "更新",
+    "accounts": "アカウント",
+    "addAccount": "アカウント追加...",
+    "settings": "設定...",
+    "quit": "終了"
+  },
+  "usage": {
+    "fiveHour": "5時間",
+    "sevenDay": "7日間",
+    "opus": "Opus",
+    "sonnet": "Sonnet",
+    "extra": "Extra"
+  },
+  "countdown": {
+    "reset": "リセット！",
+    "clickToToggle": "クリックして切り替え"
+  }
+}

@@ -40,7 +40,7 @@ pub fn run() {
         }))
         .setup(|app| {
             let settings = services::settings::SettingsService::load(app.handle());
-            let tray = tray::create_tray(app.handle())?;
+            let tray = tray::create_tray(app.handle(), &settings.language)?;
             let api_service = ClaudeApiService::new()
                 .expect("Failed to initialize Claude API service");
 
@@ -68,6 +68,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::settings::get_settings,
             commands::settings::update_settings,
+            commands::settings::update_tray_language,
             commands::usage::fetch_usage,
             commands::usage::fetch_organizations,
             commands::usage::manual_refresh,
