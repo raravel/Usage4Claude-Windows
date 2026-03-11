@@ -12,6 +12,7 @@ pub struct AppState {
     pub tray_icon: Mutex<Option<tauri::tray::TrayIcon<tauri::Wry>>>,
     pub settings: Mutex<UserSettings>,
     pub api_service: ClaudeApiService,
+    pub consecutive_errors: Mutex<u32>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -32,6 +33,7 @@ pub fn run() {
                 tray_icon: Mutex::new(Some(tray)),
                 settings: Mutex::new(settings),
                 api_service,
+                consecutive_errors: Mutex::new(0),
             };
             app.manage(state);
             Ok(())
