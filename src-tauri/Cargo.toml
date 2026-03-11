@@ -1,6 +1,6 @@
 [package]
 name = "usage4claude"
-version = "0.1.0"
+version = "1.0.0"
 description = "Usage4Claude - Claude AI usage monitor for Windows"
 authors = ["raravel"]
 edition = "2021"

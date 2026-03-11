@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Usage4Claude",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "identifier": "com.usage4claude.app",
   "build": {
     "beforeDevCommand": "npm run dev",
