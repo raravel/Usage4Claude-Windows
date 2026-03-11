@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { initUsageListener } from '$lib/state/usage.svelte';
+  import { initAccountsListener } from '$lib/state/accounts.svelte';
   import { settingsStore } from '$lib/state/settings.svelte';
   import { initI18n } from '$lib/i18n';
 
@@ -11,6 +12,7 @@
 
   onMount(async () => {
     initUsageListener();
+    initAccountsListener();
     await settingsStore.load();
     // After settings loaded, update locale if user has a saved preference
     if (settingsStore.data?.language && settingsStore.data.language !== 'system') {

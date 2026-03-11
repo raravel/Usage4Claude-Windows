@@ -1,7 +1,7 @@
 use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager,
+    AppHandle, Emitter, Manager,
 };
 use tauri_plugin_positioner::{Position, WindowExt};
 
@@ -244,6 +244,9 @@ fn switch_account(app: &AppHandle, target_id: &str) {
 
     // 메뉴 재구성
     let _ = rebuild_tray_menu(app);
+
+    // 프론트엔드 accountsStore 갱신을 위해 이벤트 emit
+    let _ = app.emit("account-changed", ());
 
     // 즉시 데이터 갱신
     let app_clone = app.clone();
