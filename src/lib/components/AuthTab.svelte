@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import type { Account, Organization, DiagnosisResult } from '$lib/types';
   import {
     getAccounts,
@@ -8,7 +8,9 @@
     removeAccount,
     switchAccount,
     diagnoseConnection,
-    openLoginWindow
+    openLoginWindow,
+    closeLoginWindow,
+    getLoginResult
   } from '$lib/api';
 
   // 계정 목록 상태
@@ -30,6 +32,18 @@
   let formError = $state<string | null>(null);
   let formStep = $state<'input' | 'select-org'>('input');
 
+  // 브라우저 로그인 상태
+  let browserLoginActive = $state(false);
+  let browserLoginStatus = $state('');
+  let loginPollingTimer: ReturnType<typeof setInterval> | null = null;
+
+  // 브라우저 로그인 — 다중 조직 선택 상태
+  let browserLoginOrgs = $state<Organization[]>([]);
+  let browserLoginSessionKey = $state('');
+  let browserLoginSelectedOrgId = $state('');
+  let browserLoginDisplayName = $state('');
+  let showBrowserOrgSelect = $state(false);
+
   async function loadAccounts() {
     loading = true;
     error = null;
@@ -43,6 +57,10 @@
   }
 
   onMount(loadAccounts);
+
+  onDestroy(() => {
+    stopLoginPolling();
+  });
 
   async function handleSwitch(accountId: string) {
     try {
@@ -156,12 +174,120 @@
     formError = null;
   }
 
+  // ── 브라우저 로그인 ────────────────────────────────────────
+
   async function handleBrowserLogin() {
+    formError = null;
     try {
+      browserLoginActive = true;
+      browserLoginStatus = '로그인 창을 여는 중...';
       await openLoginWindow();
+      browserLoginStatus = '로그인을 완료해주세요...';
+      startLoginPolling();
+    } catch (e) {
+      formError = String(e);
+      browserLoginActive = false;
+      browserLoginStatus = '';
+    }
+  }
+
+  function startLoginPolling() {
+    if (loginPollingTimer) clearInterval(loginPollingTimer);
+
+    loginPollingTimer = setInterval(async () => {
+      try {
+        const sessionKey = await getLoginResult();
+        if (sessionKey) {
+          stopLoginPolling();
+          browserLoginStatus = '세션키 추출 완료. 조직 정보 조회 중...';
+          await handleLoginSuccess(sessionKey);
+        }
+      } catch {
+        // 폴링 오류는 무시 — 다음 주기에 재시도
+      }
+    }, 2000);
+  }
+
+  function stopLoginPolling() {
+    if (loginPollingTimer) {
+      clearInterval(loginPollingTimer);
+      loginPollingTimer = null;
+    }
+  }
+
+  async function handleLoginSuccess(sessionKey: string) {
+    try {
+      const orgs = await fetchOrganizations(sessionKey);
+
+      if (orgs.length === 0) {
+        formError = '조직을 찾을 수 없습니다.';
+        browserLoginActive = false;
+        browserLoginStatus = '';
+        await closeLoginWindow();
+        return;
+      }
+
+      if (orgs.length === 1) {
+        // 조직이 1개면 자동 등록
+        browserLoginStatus = '계정 등록 중...';
+        await addAccount(sessionKey, orgs[0].uuid, orgs[0].name, orgs[0].name);
+        await closeLoginWindow();
+        browserLoginActive = false;
+        browserLoginStatus = '';
+        await loadAccounts();
+      } else {
+        // 조직이 여러 개면 선택 UI 표시
+        browserLoginOrgs = orgs;
+        browserLoginSessionKey = sessionKey;
+        browserLoginSelectedOrgId = orgs[0].uuid;
+        browserLoginDisplayName = orgs[0].name;
+        showBrowserOrgSelect = true;
+        browserLoginStatus = '조직을 선택해주세요.';
+      }
+    } catch (e) {
+      formError = String(e);
+      browserLoginActive = false;
+      browserLoginStatus = '';
+      await closeLoginWindow();
+    }
+  }
+
+  async function handleBrowserOrgConfirm() {
+    const org = browserLoginOrgs.find((o) => o.uuid === browserLoginSelectedOrgId);
+    if (!org) return;
+
+    try {
+      await addAccount(
+        browserLoginSessionKey,
+        org.uuid,
+        browserLoginDisplayName.trim() || org.name,
+        org.name
+      );
+      await closeLoginWindow();
+      browserLoginActive = false;
+      showBrowserOrgSelect = false;
+      browserLoginStatus = '';
+      browserLoginSessionKey = '';
+      browserLoginOrgs = [];
+      await loadAccounts();
     } catch (e) {
       formError = String(e);
     }
+  }
+
+  function handleBrowserOrgCancel() {
+    stopLoginPolling();
+    showBrowserOrgSelect = false;
+    browserLoginActive = false;
+    browserLoginStatus = '';
+    browserLoginSessionKey = '';
+    browserLoginOrgs = [];
+    closeLoginWindow();
+  }
+
+  function handleBrowserOrgChange() {
+    const org = browserLoginOrgs.find((o) => o.uuid === browserLoginSelectedOrgId);
+    if (org) browserLoginDisplayName = org.name;
   }
 </script>
 
@@ -275,12 +401,52 @@
         <button class="primary-btn" onclick={handleFetchOrgs} disabled={formLoading}>
           {formLoading ? '확인 중...' : '확인'}
         </button>
-        <button class="secondary-btn" onclick={handleBrowserLogin}>
-          브라우저 로그인
+        <button
+          class="secondary-btn"
+          onclick={handleBrowserLogin}
+          disabled={browserLoginActive}
+        >
+          {browserLoginActive ? '로그인 중...' : '브라우저 로그인'}
         </button>
       </div>
+
+      {#if browserLoginActive}
+        <div class="browser-login-status">
+          <span class="status-indicator">●</span>
+          <span>{browserLoginStatus}</span>
+        </div>
+      {/if}
+
+      {#if showBrowserOrgSelect}
+        <div class="browser-org-select">
+          <div class="form-row">
+            <label for="browserOrgSelect">조직 선택</label>
+            <select
+              id="browserOrgSelect"
+              bind:value={browserLoginSelectedOrgId}
+              onchange={handleBrowserOrgChange}
+            >
+              {#each browserLoginOrgs as org (org.uuid)}
+                <option value={org.uuid}>{org.name}</option>
+              {/each}
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="browserDisplayName">표시 이름</label>
+            <input
+              id="browserDisplayName"
+              type="text"
+              bind:value={browserLoginDisplayName}
+            />
+          </div>
+          <div class="form-actions">
+            <button class="primary-btn" onclick={handleBrowserOrgConfirm}>확인</button>
+            <button class="secondary-btn" onclick={handleBrowserOrgCancel}>취소</button>
+          </div>
+        </div>
+      {/if}
     {:else}
-      <!-- 조직 선택 단계 -->
+      <!-- 조직 선택 단계 (수동 입력) -->
       <div class="form-row">
         <label for="orgSelect">조직 선택</label>
         {#if formOrgs.length === 1}
@@ -629,8 +795,46 @@
     transition: border-color 0.15s;
   }
 
-  .secondary-btn:hover {
+  .secondary-btn:hover:not(:disabled) {
     border-color: #0078d4;
   }
 
+  .secondary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* 브라우저 로그인 상태 표시 */
+  .browser-login-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #888;
+    padding: 4px 0;
+  }
+
+  .status-indicator {
+    color: #0078d4;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+
+  /* 브라우저 로그인 다중 조직 선택 */
+  .browser-org-select {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 0 0;
+    border-top: 1px solid #3a3a3a;
+  }
 </style>
