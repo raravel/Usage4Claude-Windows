@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getSettings, updateSettings } from '$lib/api';
+  import { getSettings } from '$lib/api';
   import type { UserSettings } from '$lib/types';
+  import GeneralTab from '$lib/components/GeneralTab.svelte';
 
   let activeTab = $state<'general' | 'auth' | 'about'>('general');
   let settings = $state<UserSettings | null>(null);
@@ -9,12 +10,6 @@
   onMount(async () => {
     settings = await getSettings();
   });
-
-  async function saveSettings() {
-    if (settings) {
-      await updateSettings(settings);
-    }
-  }
 </script>
 
 <div class="settings-window">
@@ -31,8 +26,10 @@
   </div>
 
   <div class="tab-content">
-    {#if activeTab === 'general'}
-      <div class="tab-panel">일반 설정 (다음 태스크에서 구현)</div>
+    {#if activeTab === 'general' && settings}
+      <GeneralTab bind:settings={settings} />
+    {:else if activeTab === 'general'}
+      <div class="tab-panel">설정을 불러오는 중...</div>
     {:else if activeTab === 'auth'}
       <div class="tab-panel">인증 설정 (다음 태스크에서 구현)</div>
     {:else}
@@ -52,14 +49,14 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background: #f5f5f5;
-    color: #1a1a1a;
+    background: #1e1e1e;
+    color: #e0e0e0;
   }
 
   .tab-bar {
     display: flex;
-    background: #e0e0e0;
-    border-bottom: 1px solid #c0c0c0;
+    background: #252525;
+    border-bottom: 1px solid #3a3a3a;
     padding: 0 8px;
     gap: 2px;
   }
@@ -71,16 +68,16 @@
     cursor: pointer;
     font-size: 14px;
     padding: 10px 16px;
-    color: #555;
+    color: #888;
     transition: color 0.15s, border-color 0.15s;
   }
 
   .tab-bar button:hover {
-    color: #1a1a1a;
+    color: #e0e0e0;
   }
 
   .tab-bar button.active {
-    color: #1a1a1a;
+    color: #e0e0e0;
     border-bottom-color: #0078d4;
     font-weight: 600;
   }
@@ -92,7 +89,7 @@
 
   .tab-panel {
     padding: 24px;
-    color: #666;
+    color: #888;
     font-size: 14px;
   }
 </style>
