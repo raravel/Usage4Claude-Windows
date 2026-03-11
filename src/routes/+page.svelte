@@ -3,19 +3,9 @@
   import { usageStore } from '$lib/state/usage.svelte';
   import { manualRefresh } from '$lib/api';
   import { getCurrentWindow } from '@tauri-apps/api/window';
+  import UsageRow from '$lib/components/UsageRow.svelte';
 
   let refreshing = $state(false);
-
-  function formatLimitType(type: string): string {
-    const map: Record<string, string> = {
-      fiveHour: '5-Hour',
-      sevenDay: '7-Day',
-      opus: 'Opus',
-      sonnet: 'Sonnet',
-      extra: 'Extra',
-    };
-    return map[type] || type;
-  }
 
   async function handleRefresh() {
     refreshing = true;
@@ -57,17 +47,12 @@
     {#if usageStore.data}
       <div class="usage-grid">
         {#each usageStore.data.limits as limit}
-          <div class="usage-item">
-            <div class="usage-percentage">{Math.round(limit.percentage * 100)}%</div>
-            <div class="usage-label">{formatLimitType(limit.limitType)}</div>
-          </div>
+          <UsageRow {limit} />
         {/each}
+        {#if usageStore.data.extra}
+          <UsageRow limit={usageStore.data.extra} />
+        {/if}
       </div>
-      {#if usageStore.data.extra}
-        <div class="extra-usage">
-          Extra: {Math.round(usageStore.data.extra.percentage * 100)}%
-        </div>
-      {/if}
     {:else if usageStore.error}
       <div class="error-message">{usageStore.error}</div>
     {:else}
@@ -146,28 +131,6 @@
     flex-wrap: wrap;
     gap: 16px;
     justify-content: center;
-  }
-
-  .usage-item {
-    text-align: center;
-    min-width: 80px;
-  }
-
-  .usage-percentage {
-    font-size: 24px;
-    font-weight: bold;
-  }
-
-  .usage-label {
-    font-size: 12px;
-    color: #999;
-    margin-top: 4px;
-  }
-
-  .extra-usage {
-    text-align: center;
-    margin-top: 12px;
-    color: #999;
   }
 
   .error-message {
