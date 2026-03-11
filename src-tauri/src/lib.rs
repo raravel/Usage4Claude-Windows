@@ -2,6 +2,7 @@ mod tray;
 mod models;
 mod services;
 mod commands;
+mod logging;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -29,6 +30,8 @@ pub struct AppState {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let debug = std::env::args().any(|a| a == "--debug");
+
     tauri::Builder::default()
         // REVIEW: PASS — tauri_plugin_shell::init() 올바르게 등록됨. Cargo.toml, capabilities/default.json의 "shell:allow-open" 권한도 확인됨.
         .plugin(tauri_plugin_shell::init())
@@ -41,7 +44,15 @@ pub fn run() {
                 let _ = window.set_focus();
             }
         }))
-        .setup(|app| {
+        .setup(move |app| {
+            // Initialize logging
+            let log_dir = app.path().app_config_dir()
+                .map(|p| p.join("logs"))
+                .unwrap_or_else(|_| std::path::PathBuf::from("./logs"));
+            std::fs::create_dir_all(&log_dir).ok();
+            logging::init_logging(&log_dir, debug);
+            tracing::info!("Usage4Claude starting");
+
             let settings = services::settings::SettingsService::load(app.handle());
             let first_launch = !settings.first_launch_done;
             let tray = tray::create_tray(app.handle(), &settings.language)?;

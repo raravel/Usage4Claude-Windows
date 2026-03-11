@@ -111,6 +111,7 @@ impl ClaudeApiService {
 
     /// 사용량 + 추가 사용량 요청 (usage는 재시도, extra는 1회만)
     pub async fn fetch_all_usage(&self, org_id: &str, session_key: &str) -> Result<UsageData, AppError> {
+        tracing::debug!("Fetching usage for org {}", org_id);
         let config = RetryConfig::default();
 
         let org_id_owned = org_id.to_string();
@@ -123,7 +124,13 @@ impl ClaudeApiService {
         // extra는 재시도 없이 1회만
         let extra_result = self.get_extra_usage(org_id, session_key).await.ok();
 
-        let usage = usage_result?;
+        let usage = match usage_result {
+            Ok(u) => u,
+            Err(e) => {
+                tracing::warn!("API error: {}", e);
+                return Err(e);
+            }
+        };
         Ok(UsageData::from_response(&usage, extra_result.as_ref()))
     }
 
