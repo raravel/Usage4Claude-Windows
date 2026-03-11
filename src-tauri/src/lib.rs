@@ -27,6 +27,7 @@ pub struct AppState {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -73,6 +74,7 @@ pub fn run() {
             commands::account::remove_account,
             commands::account::switch_account,
             commands::account::diagnose_connection,
+            commands::app::get_app_version,
         ])
         .on_window_event(|window, event| {
             if window.label() == "popup" {
