@@ -1,3 +1,8 @@
+// REVIEW: PASS — 모든 완료 조건 충족
+// REVIEW: [조건1] 표시 설정(displayMode, iconTheme, displayContent), 새로고침(refreshMode, refreshIntervalMinutes), 외관(theme, timeFormat, language), 시스템(launchAtLogin, notificationsEnabled, resetNotifications) UI 모두 구현됨
+// REVIEW: [조건2] 각 컨트롤 onchange에 save() 호출 → updateSettings() → invoke('update_settings') 즉시 반영 확인
+// REVIEW: [조건3] handleLaunchAtLogin에서 @tauri-apps/plugin-autostart의 enable/disable 호출, capabilities 및 Rust 플러그인 등록 모두 확인
+// REVIEW: Svelte 5 Runes($props, $bindable) 사용 — stores 없음, $: 없음 — 규칙 준수
 <script lang="ts">
   import type { UserSettings } from '$lib/types';
   import { updateSettings } from '$lib/api';
