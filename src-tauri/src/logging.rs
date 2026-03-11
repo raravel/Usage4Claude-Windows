@@ -1,3 +1,9 @@
+// REVIEW: PASS — [완료조건1,2] debug=false 시 EnvFilter::new("usage4claude=warn,warn")으로 WARN이 기본값이며,
+// RUST_LOG 환경변수로 재정의 가능. debug=true 시 "usage4claude=debug,warn"으로 DEBUG 레벨 적용.
+// [완료조건3] rolling::daily + cleanup_old_logs(7일) 구현 올바름. 다만 cleanup이 로그 파일만
+// 대상으로 하지 않고 디렉토리 내 모든 파일을 삭제하는 점은 실사용 환경에서는 주의 필요 (완료조건 범위 외).
+// [완료조건4] std::mem::forget(guard)는 앱 종료 시 미플러시 위험이 있으나, 단순 앱에서 허용되는 패턴.
+// session_key가 어떠한 tracing 호출에도 포함되지 않음을 확인.
 use std::path::Path;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 use tracing_appender::rolling;

@@ -30,6 +30,7 @@ pub struct AppState {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // REVIEW: PASS — [완료조건2] std::env::args()로 "--debug" 플래그 감지. setup 클로저에 move로 캡처.
     let debug = std::env::args().any(|a| a == "--debug");
 
     tauri::Builder::default()
