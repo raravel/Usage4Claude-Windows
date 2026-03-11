@@ -33,6 +33,7 @@ export interface UserSettings {
   launchAtLogin: boolean;
   notificationsEnabled: boolean;
   resetNotifications: boolean;
+  firstLaunchDone: boolean;
 }
 
 export interface Account {
