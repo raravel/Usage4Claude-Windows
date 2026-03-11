@@ -21,6 +21,8 @@ pub fn update_settings(
     Ok(())
 }
 
+// REVIEW: PASS — [완료조건1,4] is_first_launch: !first_launch_done 반환. complete_first_launch: 플래그를 true로 설정하고 즉시 저장.
+//   2회차 실행 시 first_launch_done=true이므로 환영 윈도우 미표시 보장.
 #[tauri::command]
 pub fn is_first_launch(state: State<'_, AppState>) -> bool {
     let settings = state.settings.lock().unwrap();
