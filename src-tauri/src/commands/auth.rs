@@ -7,6 +7,21 @@
 // 4. 비영구 세션: close_login_window로 명시적 닫기 지원, 07-01에서 ephemeral 처리 예정 — 적절.
 // 5. 두 command 모두 lib.rs invoke_handler에 등록됨.
 // 6. cargo check / clippy -D warnings / svelte-check / vite build 모두 오류 없음.
+//
+// REVIEW [07-01]: PASS — 완료 조건 전체 확인.
+// [조건 1] sessionKey 자동 추출: on_navigation에서 claude.ai 비로그인 경로 탐지 후
+//   2초 delay + win.eval()로 JS 주입, receive_login_cookies invoke → parse_session_key로
+//   쿠키 파싱 → AppState.login_session_key에 저장. 구현 완료.
+// [조건 2] Organizations 조회/선택: handleLoginSuccess에서 fetchOrganizations 호출.
+//   1개면 자동 등록, 다수면 showBrowserOrgSelect UI로 선택. 구현 완료.
+// [조건 3] keyring 저장 + 새로고침: addAccount 호출 후 closeLoginWindow + loadAccounts 실행.
+//   구현 완료.
+// [조건 4] 세션키 로그 미노출: println!/dbg!/console.log 없음. 키 값은 조용히 저장만 됨.
+// [기술 규칙] login_session_key: Mutex<Option<String>> → AppState에 추가 및 초기화 확인.
+//   receive_login_cookies, get_login_result → lib.rs invoke_handler에 등록 확인.
+//   Svelte 5 Runes ($state) 사용, stores 없음. onDestroy에서 polling cleanup 확인.
+// [참고] on_navigation은 로그인 후 claude.ai 내 페이지 이동마다 재발화되나,
+//   이미 키가 저장된 후 재주입은 멱등적이므로 무해함.
 use tauri::{Manager, Emitter};
 use crate::models::error::AppError;
 
