@@ -29,6 +29,9 @@ export function initAccountsListener() {
   listen('account-changed', () => {
     accountsStore.load();
   });
+  // REVIEW: [PASS] listen()의 반환값(Promise<UnlistenFn>)을 무시하고 있음.
+  // 현재 구조(앱 전체 수명과 같은 레이아웃)에서는 실용적으로 문제없으나,
+  // 향후 cleanup이 필요할 경우 unlisten 함수를 저장해 onDestroy에서 호출하는 것을 권장.
   // Initial load
   accountsStore.load();
 }

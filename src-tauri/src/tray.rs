@@ -245,6 +245,13 @@ fn switch_account(app: &AppHandle, target_id: &str) {
     // 메뉴 재구성
     let _ = rebuild_tray_menu(app);
 
+    // REVIEW: [FAIL] account-changed 이벤트를 emit하지 않음.
+    // commands/account.rs::switch_account는 emit하지만, tray 메뉴 클릭 시 호출되는 이
+    // 로컬 switch_account 함수는 emit이 누락되어 있음.
+    // 트레이 메뉴로 계정을 전환하면 프론트엔드 accountsStore가 갱신되지 않는다.
+    // 수정: `app.emit("account-changed", ())` 호출을 do_refresh 전에 추가해야 함.
+    // (tauri::Emitter trait import도 필요)
+
     // 즉시 데이터 갱신
     let app_clone = app.clone();
     tauri::async_runtime::spawn(async move {
