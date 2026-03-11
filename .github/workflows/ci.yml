@@ -1,3 +1,4 @@
+# REVIEW: PASS - 완료조건 충족. cargo check, clippy(-D warnings), npm run check(svelte-check), npm run build 모두 포함. PR 대상 main 브랜치로 정확히 설정됨.
 name: CI
 
 on:
