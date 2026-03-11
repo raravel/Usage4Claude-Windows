@@ -6,39 +6,37 @@ on:
       - 'v*'
 
 jobs:
-  release:
+  build:
     runs-on: windows-latest
     permissions:
       contents: write
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
-    - name: Restore dependencies
-      run: dotnet restore src/Usage4Claude/Usage4Claude.csproj
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
 
-    - name: Publish (framework-dependent)
-      run: dotnet publish src/Usage4Claude/Usage4Claude.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish/framework-dependent
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
 
-    - name: Publish (self-contained)
-      run: dotnet publish src/Usage4Claude/Usage4Claude.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish/self-contained
+      - name: Install frontend dependencies
+        run: npm ci
 
-    - name: Create ZIP archives
-      shell: pwsh
-      run: |
-        Compress-Archive -Path publish/framework-dependent/* -DestinationPath Usage4Claude-${{ github.ref_name }}-win-x64.zip
-        Compress-Archive -Path publish/self-contained/* -DestinationPath Usage4Claude-${{ github.ref_name }}-win-x64-self-contained.zip
-
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: |
-          Usage4Claude-${{ github.ref_name }}-win-x64.zip
-          Usage4Claude-${{ github.ref_name }}-win-x64-self-contained.zip
-        generate_release_notes: true
-        draft: false
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Usage4Claude v__VERSION__'
+          releaseBody: 'See the assets to download and install this version.'
+          releaseDraft: true
+          prerelease: false
