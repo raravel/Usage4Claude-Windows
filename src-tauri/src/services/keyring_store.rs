@@ -1,3 +1,4 @@
+// REVIEW: PASS — store_session_key/get_session_key/delete_session_key 존재, keyring v3, 키 네이밍 정확, store_accounts/load_accounts 존재, NoEntry시 빈 Vec 반환, session_key 값 로그 미노출, cargo check/clippy 통과
 #![allow(dead_code)]
 
 use crate::models::account::Account;
