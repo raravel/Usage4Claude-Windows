@@ -10,7 +10,20 @@
     "frontendDist": "../build"
   },
   "app": {
-    "windows": [],
+    "windows": [
+      {
+        "label": "popup",
+        "title": "Usage4Claude",
+        "width": 340,
+        "height": 280,
+        "decorations": false,
+        "skipTaskbar": true,
+        "resizable": false,
+        "alwaysOnTop": true,
+        "visible": false,
+        "transparent": true
+      }
+    ],
     "security": {
       "csp": null
     }
