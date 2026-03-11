@@ -1,3 +1,4 @@
+<!-- REVIEW: PASS -->
 <script lang="ts">
   let {
     percentage = 0,
