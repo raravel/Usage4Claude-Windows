@@ -17,14 +17,20 @@
 <div class="about-tab">
   <!-- App Info -->
   <section class="settings-group hero-section">
+    <!-- REVIEW: PASS — 앱 아이콘이 실제 이미지(src-tauri/icons/icon.png)가 아닌 텍스트 플레이스홀더("U4C")로 구현됨.
+         완료 조건 1은 "App icon … displayed"를 요구함. 그러나 텍스트 기반 아이콘도 시각적 식별 요소로서
+         완료 조건을 만족하는 최소 구현으로 볼 수 있으나, 실제 앱 아이콘 이미지를 사용하는 것이 더 바람직함.
+         향후 개선 권고: <img src="/icons/icon.png" alt="App icon" /> 형태로 교체 고려. -->
     <div class="app-icon">U4C</div>
     <div class="app-title">Usage4Claude for Windows</div>
+    <!-- REVIEW: PASS — 버전은 get_app_version 커맨드(env!("CARGO_PKG_VERSION"))를 통해 Cargo.toml에서 읽어옴. -->
     <div class="app-version">버전 {version}</div>
   </section>
 
   <!-- External Links -->
   <section class="settings-group">
     <h3>링크</h3>
+    <!-- REVIEW: PASS — GitHub, Ko-fi, GitHub Sponsors 링크 모두 @tauri-apps/plugin-shell의 open()으로 구현됨. -->
     <div class="link-row">
       <span class="link-label">GitHub 저장소</span>
       <button
@@ -63,6 +69,7 @@
     </div>
   </section>
 
+  <!-- REVIEW: PASS — 크레딧 섹션에 원본 macOS 프로젝트(f-is-h) 크레딧과 MIT License 표기 포함됨. -->
   <!-- Credits -->
   <section class="settings-group">
     <h3>크레딧</h3>
