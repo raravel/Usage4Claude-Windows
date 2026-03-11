@@ -11,6 +11,7 @@ use models::settings::UserSettings;
 use models::usage::UsageData;
 use services::claude_api::ClaudeApiService;
 use services::icon_renderer::IconRenderer;
+use services::notification::NotificationTracker;
 
 pub struct AppState {
     pub tray_icon: Mutex<Option<tauri::tray::TrayIcon<tauri::Wry>>>,
@@ -23,6 +24,7 @@ pub struct AppState {
     pub last_refresh: Mutex<Option<std::time::Instant>>,
     pub icon_renderer: Mutex<IconRenderer>,
     pub login_session_key: Mutex<Option<String>>,
+    pub notification_tracker: Mutex<NotificationTracker>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -30,6 +32,7 @@ pub fn run() {
     tauri::Builder::default()
         // REVIEW: PASS — tauri_plugin_shell::init() 올바르게 등록됨. Cargo.toml, capabilities/default.json의 "shell:allow-open" 권한도 확인됨.
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -61,6 +64,7 @@ pub fn run() {
                 last_refresh: Mutex::new(None),
                 icon_renderer: Mutex::new(IconRenderer::new()),
                 login_session_key: Mutex::new(None),
+                notification_tracker: Mutex::new(NotificationTracker::new()),
             };
             app.manage(state);
             Ok(())
