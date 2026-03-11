@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use crate::models::error::AppError;
 
+// REVIEW: PASS — [완료조건1] GITHUB_API_URL이 올바른 GitHub Releases API 엔드포인트를 사용함.
+// REVIEW: PASS — [완료조건3] GITHUB_REPO_PREFIX를 사용해 html_url이 실제 저장소 URL로 시작하는지 starts_with 검증함.
 const GITHUB_API_URL: &str = "https://api.github.com/repos/raravel/Usage4Claude-Windows/releases/latest";
 const GITHUB_REPO_PREFIX: &str = "https://github.com/raravel/Usage4Claude-Windows/";
 
@@ -25,6 +27,7 @@ pub struct UpdateChecker {
     client: reqwest::Client,
 }
 
+// REVIEW: PASS — [완료조건1] reqwest 클라이언트에 User-Agent 헤더("Usage4Claude-Windows")가 설정됨. GitHub API 요건 충족.
 impl UpdateChecker {
     pub fn new() -> Self {
         let client = reqwest::Client::builder()
@@ -74,6 +77,8 @@ impl UpdateChecker {
     }
 }
 
+// REVIEW: PASS — [완료조건1] semver 비교를 직접 구현. major.minor.patch 순서로 비교하며 단위 테스트 6개 포함.
+// REVIEW: PASS — [완료조건2] update_available 플래그가 UpdateInfo 구조체에 포함되며 Tauri 커맨드로 반환됨.
 /// Simple semver comparison: returns true if latest > current
 fn is_newer_version(current: &str, latest: &str) -> bool {
     let parse = |v: &str| -> Vec<u32> {
