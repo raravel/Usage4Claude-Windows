@@ -53,3 +53,11 @@ export async function diagnoseConnection(accountId: string): Promise<DiagnosisRe
 export async function getAppVersion(): Promise<string> {
   return invoke<string>('get_app_version');
 }
+
+export async function openLoginWindow(): Promise<void> {
+  return invoke('open_login_window');
+}
+
+export async function closeLoginWindow(): Promise<void> {
+  return invoke('close_login_window');
+}
