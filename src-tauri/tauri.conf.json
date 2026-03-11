@@ -22,6 +22,16 @@
         "alwaysOnTop": true,
         "visible": false,
         "transparent": true
+      },
+      {
+        "label": "settings",
+        "title": "설정",
+        "url": "/settings",
+        "width": 500,
+        "height": 600,
+        "resizable": false,
+        "visible": false,
+        "center": true
       }
     ],
     "security": {
