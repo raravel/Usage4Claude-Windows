@@ -54,3 +54,11 @@ export interface DiagnosisResult {
   organizations: Organization[];
   errorMessage: string | null;
 }
+
+export interface UpdateInfo {
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+  releaseUrl: string | null;
+  releaseNotes: string | null;
+}

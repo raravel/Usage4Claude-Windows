@@ -83,6 +83,7 @@ pub fn run() {
             commands::account::switch_account,
             commands::account::diagnose_connection,
             commands::app::get_app_version,
+            commands::app::check_for_updates,
             commands::auth::open_login_window,
             commands::auth::close_login_window,
             commands::auth::receive_login_cookies,
