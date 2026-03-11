@@ -27,6 +27,7 @@ pub struct AppState {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             // 두 번째 인스턴스 시작 시 기존 앱 포커스
             if let Some(window) = app.get_webview_window("main") {
@@ -68,6 +69,13 @@ pub fn run() {
             commands::account::get_accounts,
             commands::account::validate_session,
         ])
+        .on_window_event(|window, event| {
+            if window.label() == "popup" {
+                if let tauri::WindowEvent::Focused(false) = event {
+                    let _ = window.hide();
+                }
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
