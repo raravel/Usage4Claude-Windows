@@ -1,3 +1,4 @@
+<!-- REVIEW: PASS -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { usageStore } from '$lib/state/usage.svelte';
