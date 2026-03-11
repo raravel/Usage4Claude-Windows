@@ -29,3 +29,14 @@ desktop.ini
 
 # Reference project (macOS original)
 /Usage4Claude/
+
+# Node.js
+node_modules/
+
+# Vite / SvelteKit build
+build/
+.svelte-kit/
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
