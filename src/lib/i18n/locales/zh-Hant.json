@@ -97,7 +97,12 @@
       "credits": "致謝",
       "originalAuthor": "原版 macOS 應用程式作者",
       "windowsPort": "Windows 移植",
-      "license": "授權條款"
+      "license": "授權條款",
+      "checkUpdate": "檢查更新",
+      "checking": "檢查中...",
+      "newVersion": "新版本 {version} 可用",
+      "download": "下載",
+      "upToDate": "已是最新版本"
     }
   },
   "tray": {

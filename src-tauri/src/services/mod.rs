@@ -6,3 +6,4 @@ pub mod refresh;
 pub mod smart_monitor;
 pub mod icon_renderer;
 pub mod notification;
+pub mod update_checker;

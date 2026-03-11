@@ -1,10 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
-  import { getAppVersion } from '$lib/api';
+  import { getAppVersion, checkForUpdates } from '$lib/api';
   import { open } from '@tauri-apps/plugin-shell';
+  import type { UpdateInfo } from '$lib/types';
 
   let version = $state('...');
+  let checkingUpdate = $state(false);
+  let updateInfo = $state<UpdateInfo | null>(null);
 
   onMount(async () => {
     version = await getAppVersion();
@@ -12,6 +15,18 @@
 
   async function openLink(url: string) {
     await open(url);
+  }
+
+  async function handleCheckUpdate() {
+    checkingUpdate = true;
+    updateInfo = null;
+    try {
+      updateInfo = await checkForUpdates();
+    } catch (e) {
+      // silently ignore network errors
+    } finally {
+      checkingUpdate = false;
+    }
   }
 </script>
 
@@ -26,6 +41,27 @@
     <div class="app-title">{$t('app.title')}</div>
     <!-- REVIEW: PASS — 버전은 get_app_version 커맨드(env!("CARGO_PKG_VERSION"))를 통해 Cargo.toml에서 읽어옴. -->
     <div class="app-version">{$t('settings.about.version', { values: { version } })}</div>
+
+    <!-- Update check section -->
+    <div class="update-section">
+      <button class="update-btn" onclick={handleCheckUpdate} disabled={checkingUpdate}>
+        {checkingUpdate ? $t('settings.about.checking') : $t('settings.about.checkUpdate')}
+      </button>
+      {#if updateInfo}
+        {#if updateInfo.updateAvailable}
+          <div class="update-available">
+            <span>{$t('settings.about.newVersion', { values: { version: updateInfo.latestVersion } })}</span>
+            {#if updateInfo.releaseUrl}
+              <button class="link-button" onclick={() => openLink(updateInfo!.releaseUrl!)}>
+                {$t('settings.about.download')}
+              </button>
+            {/if}
+          </div>
+        {:else}
+          <span class="up-to-date">{$t('settings.about.upToDate')}</span>
+        {/if}
+      {/if}
+    </div>
   </section>
 
   <!-- External Links -->
@@ -148,6 +184,47 @@
   }
 
   .app-version {
+    font-size: 13px;
+    color: #888;
+  }
+
+  .update-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .update-btn {
+    background: #0078d4;
+    border: none;
+    border-radius: 6px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 6px 16px;
+    transition: background 0.15s;
+  }
+
+  .update-btn:hover:not(:disabled) {
+    background: #106ebe;
+  }
+
+  .update-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .update-available {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #4caf50;
+  }
+
+  .up-to-date {
     font-size: 13px;
     color: #888;
   }
