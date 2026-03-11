@@ -43,6 +43,7 @@ pub fn run() {
         }))
         .setup(|app| {
             let settings = services::settings::SettingsService::load(app.handle());
+            let first_launch = !settings.first_launch_done;
             let tray = tray::create_tray(app.handle(), &settings.language)?;
             let api_service = ClaudeApiService::new()
                 .expect("Failed to initialize Claude API service");
@@ -67,12 +68,29 @@ pub fn run() {
                 notification_tracker: Mutex::new(NotificationTracker::new()),
             };
             app.manage(state);
+
+            // REVIEW: PASS — [완료조건1] first_launch_done=false 시 welcome 윈도우를 동적으로 생성. setup에서 state 관리 후 조건 분기 올바름.
+            if first_launch {
+                let _ = tauri::WebviewWindowBuilder::new(
+                    app,
+                    "welcome",
+                    tauri::WebviewUrl::App("/welcome".into()),
+                )
+                .title("Welcome to Usage4Claude")
+                .inner_size(500.0, 560.0)
+                .center()
+                .resizable(false)
+                .build();
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::settings::get_settings,
             commands::settings::update_settings,
             commands::settings::update_tray_language,
+            commands::settings::is_first_launch,
+            commands::settings::complete_first_launch,
             commands::usage::fetch_usage,
             commands::usage::fetch_organizations,
             commands::usage::manual_refresh,

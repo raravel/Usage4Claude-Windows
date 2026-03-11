@@ -73,3 +73,11 @@ export async function getLoginResult(): Promise<string | null> {
 export async function updateTrayLanguage(language: string): Promise<void> {
   return invoke('update_tray_language', { language });
 }
+
+export async function isFirstLaunch(): Promise<boolean> {
+  return invoke<boolean>('is_first_launch');
+}
+
+export async function completeFirstLaunch(): Promise<void> {
+  return invoke('complete_first_launch');
+}
