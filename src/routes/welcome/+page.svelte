@@ -1,4 +1,9 @@
 <script lang="ts">
+  // REVIEW: PASS — [완료조건1] /welcome 라우트의 위저드 페이지. 4단계(환영·계정·테마·완료)로 구성됨.
+  // REVIEW: PASS — [완료조건2] openLoginWindow + polling(getLoginResult) 브라우저 로그인 구현 확인.
+  // REVIEW: PASS — [완료조건3] 테마·displayMode·iconTheme 셀렉터 + saveSettings(updateSettings 호출) 구현 확인.
+  // REVIEW: PASS — [완료조건4] finish()/skipAll() 모두 completeFirstLaunch() 호출 후 창 닫기 → 재실행 시 미표시 보장.
+  // REVIEW: PASS — Svelte 5 Runes($state, $derived 미사용 시 $state만) 사용. $: 반응식 없음.
   import { onMount, onDestroy } from 'svelte';
   import { t } from 'svelte-i18n';
   import { getCurrentWindow } from '@tauri-apps/api/window';

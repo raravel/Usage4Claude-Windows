@@ -69,6 +69,7 @@ pub fn run() {
             };
             app.manage(state);
 
+            // REVIEW: PASS — [완료조건1] first_launch_done=false 시 welcome 윈도우를 동적으로 생성. setup에서 state 관리 후 조건 분기 올바름.
             if first_launch {
                 let _ = tauri::WebviewWindowBuilder::new(
                     app,

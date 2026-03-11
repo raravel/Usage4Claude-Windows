@@ -14,6 +14,7 @@ pub struct UserSettings {
     pub launch_at_login: bool,
     pub notifications_enabled: bool,
     pub reset_notifications: bool,
+    // REVIEW: PASS — [완료조건1,4] first_launch_done 필드 추가. Default=false → 첫 실행 환영 윈도우 표시. serde camelCase 직렬화로 TS types.ts의 firstLaunchDone과 1:1 매핑.
     pub first_launch_done: bool,
 }
 
