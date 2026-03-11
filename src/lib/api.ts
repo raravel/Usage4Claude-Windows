@@ -49,3 +49,7 @@ export async function switchAccount(accountId: string): Promise<void> {
 export async function diagnoseConnection(accountId: string): Promise<DiagnosisResult> {
   return invoke<DiagnosisResult>('diagnose_connection', { accountId });
 }
+
+export async function getAppVersion(): Promise<string> {
+  return invoke<string>('get_app_version');
+}
