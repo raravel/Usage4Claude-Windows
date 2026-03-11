@@ -7,7 +7,8 @@
     addAccount,
     removeAccount,
     switchAccount,
-    diagnoseConnection
+    diagnoseConnection,
+    openLoginWindow
   } from '$lib/api';
 
   // 계정 목록 상태
@@ -154,6 +155,14 @@
     formDisplayName = '';
     formError = null;
   }
+
+  async function handleBrowserLogin() {
+    try {
+      await openLoginWindow();
+    } catch (e) {
+      formError = String(e);
+    }
+  }
 </script>
 
 <div class="auth-tab">
@@ -266,7 +275,7 @@
         <button class="primary-btn" onclick={handleFetchOrgs} disabled={formLoading}>
           {formLoading ? '확인 중...' : '확인'}
         </button>
-        <button class="disabled-btn" disabled title="다음 업데이트에서 지원">
+        <button class="secondary-btn" onclick={handleBrowserLogin}>
           브라우저 로그인
         </button>
       </div>
@@ -624,13 +633,4 @@
     border-color: #0078d4;
   }
 
-  .disabled-btn {
-    background: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 4px;
-    color: #555;
-    font-size: 13px;
-    padding: 6px 16px;
-    cursor: not-allowed;
-  }
 </style>

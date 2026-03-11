@@ -76,6 +76,8 @@ pub fn run() {
             commands::account::switch_account,
             commands::account::diagnose_connection,
             commands::app::get_app_version,
+            commands::auth::open_login_window,
+            commands::auth::close_login_window,
         ])
         .on_window_event(|window, event| {
             if window.label() == "popup" {
