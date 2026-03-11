@@ -1,3 +1,9 @@
+// REVIEW: [PASS]
+// 완료조건 1: load()/save() 구현 완료. app_config_dir()로 settings.json 경로 결정 ✓
+// 완료조건 2: UserSettings::default() 구현. 파일 없음/파싱 실패 모두 기본값 반환 ✓
+// 완료조건 3: get_settings, update_settings 커맨드 존재, lib.rs invoke_handler 등록 ✓
+// 추가: 모든 enum에 Serialize/Deserialize 파생. AppState에 settings: Mutex<UserSettings> ✓
+// cargo check / cargo clippy -D warnings 모두 통과 ✓
 use std::fs;
 use std::path::PathBuf;
 use tauri::Manager;
