@@ -4,6 +4,7 @@ use crate::models::settings::UserSettings;
 
 const WARNING_THRESHOLD: f64 = 0.9; // 90%
 const RESET_DROP_THRESHOLD: f64 = 0.5; // percentage drop > 50% = likely reset
+// REVIEW: PASS — WARNING_THRESHOLD(0.9)로 90% 경고 조건 올바르게 설정됨. RESET_DROP_THRESHOLD(0.5)는 50%p 이상 하락을 의미하며 resets_at 변경을 추가 조건으로 요구하므로 오탐 가능성이 낮음.
 
 /// Tracks notification state to prevent duplicates
 pub struct NotificationTracker {
@@ -25,6 +26,7 @@ impl NotificationTracker {
     }
 
     /// Check usage data and return notifications to send
+    // REVIEW: PASS — check()가 상태 변경(warned_periods, reset_notified_periods, previous_data)을 모두 담당하며 notifications를 Vec으로 반환해 호출자가 실제 전송을 담당하는 설계가 명확함.
     pub fn check(&mut self, data: &UsageData, settings: &UserSettings) -> Vec<NotificationInfo> {
         let mut notifications = Vec::new();
 
@@ -38,6 +40,7 @@ impl NotificationTracker {
             let type_key = format!("{:?}", limit.limit_type);
 
             // 90% warning
+            // REVIEW: PASS — notifications_enabled 설정으로 90% 경고 알림 비활성화 가능. limit_type + resets_at 조합으로 리셋 주기당 1회만 전송되어 중복 방지 충족.
             if settings.notifications_enabled && limit.percentage >= WARNING_THRESHOLD {
                 let already_warned = self.warned_periods
                     .get(&type_key)
@@ -58,6 +61,7 @@ impl NotificationTracker {
             }
 
             // Reset detection
+            // REVIEW: PASS — reset_notifications 설정으로 리셋 알림 비활성화 가능. resets_at 변경 + 50%p 이상 하락 두 조건을 AND로 결합해 신뢰도 높은 리셋 감지. reset_notified_periods로 새 주기당 1회 보장.
             if settings.reset_notifications {
                 if let Some(prev) = &self.previous_data {
                     let prev_limit = prev.limits.iter()
