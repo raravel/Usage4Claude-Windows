@@ -47,3 +47,10 @@ export interface Organization {
   uuid: string;
   name: string;
 }
+
+export interface DiagnosisResult {
+  sessionValid: boolean;
+  apiReachable: boolean;
+  organizations: Organization[];
+  errorMessage: string | null;
+}

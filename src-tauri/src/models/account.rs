@@ -18,3 +18,13 @@ pub struct Organization {
     pub uuid: String,
     pub name: String,
 }
+
+/// 연결 진단 결과
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DiagnosisResult {
+    pub session_valid: bool,
+    pub api_reachable: bool,
+    pub organizations: Vec<Organization>,
+    pub error_message: Option<String>,
+}
