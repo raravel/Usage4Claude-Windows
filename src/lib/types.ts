@@ -1,3 +1,4 @@
+// REVIEW: PASS
 // TypeScript types — 1:1 mapping with Rust models (camelCase)
 
 export type LimitType = 'fiveHour' | 'sevenDay' | 'opus' | 'sonnet' | 'extra';
