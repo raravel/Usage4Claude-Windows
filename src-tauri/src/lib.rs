@@ -6,10 +6,12 @@ mod commands;
 use std::sync::Mutex;
 use tauri::Manager;
 use models::settings::UserSettings;
+use services::claude_api::ClaudeApiService;
 
 pub struct AppState {
     pub tray_icon: Mutex<Option<tauri::tray::TrayIcon<tauri::Wry>>>,
     pub settings: Mutex<UserSettings>,
+    pub api_service: ClaudeApiService,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -24,9 +26,12 @@ pub fn run() {
         .setup(|app| {
             let settings = services::settings::SettingsService::load(app.handle());
             let tray = tray::create_tray(app.handle())?;
+            let api_service = ClaudeApiService::new()
+                .expect("Failed to initialize Claude API service");
             let state = AppState {
                 tray_icon: Mutex::new(Some(tray)),
                 settings: Mutex::new(settings),
+                api_service,
             };
             app.manage(state);
             Ok(())
@@ -34,6 +39,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::settings::get_settings,
             commands::settings::update_settings,
+            commands::usage::fetch_usage,
+            commands::usage::fetch_organizations,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
